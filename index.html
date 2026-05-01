@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>漢字五子棋 | Sophia老師的AI練習本</title>
+  
+  <!-- 引入 Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- 引入 Phosphor Icons 圖示庫 -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <style>
+    @keyframes bounce-short {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5%); }
+    }
+    .animate-bounce-short {
+      animation: bounce-short 1s ease-in-out infinite;
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 確保文字不會超出圓形 */
+    .word-break-tight {
+      word-break: break-word;
+      overflow-wrap: break-word;
+      line-height: 1.1;
+    }
+  </style>
+</head>
+<body class="bg-orange-50 font-sans text-gray-800 min-h-screen flex flex-col">
+
+  <!-- ==================== 設定畫面 (Setup Screen) ==================== -->
+  <div id="setup-screen" class="flex-1 flex flex-col items-center justify-between p-6 w-full">
+    <div class="flex-1 flex items-center justify-center w-full my-4">
+      <div class="bg-white rounded-3xl shadow-xl max-w-2xl w-full p-8 border-4 border-orange-200 transition-all">
+        
+        <!-- 主設定畫面 -->
+        <div id="main-setup-view" class="fade-in">
+          <h1 class="text-3xl sm:text-4xl font-black text-orange-600 mb-6 text-center tracking-wider">
+            📝 漢字五子棋
+          </h1>
+          <p class="text-gray-600 text-center mb-8 text-lg">
+            讓孩子在遊戲中自然開口說華語！先設定今天要複習的生詞吧！
+          </p>
+
+          <div class="space-y-6">
+            <div>
+              <label class="block text-xl font-bold text-gray-800 mb-2">1. 選擇遊戲模式</label>
+              <div class="flex gap-4">
+                <button id="btn-mode-pve" onclick="setGameMode('pve')" class="flex-1 flex flex-col items-center p-4 rounded-2xl border-4 transition-all border-orange-500 bg-orange-100">
+                  <i class="ph ph-monitor-play text-5xl mb-2 text-orange-500"></i>
+                  <span class="font-bold text-lg">單人挑戰電腦</span>
+                  <span class="text-sm text-gray-500 mt-1">回家複習、語音帶讀</span>
+                </button>
+                <button id="btn-mode-pvp" onclick="setGameMode('pvp')" class="flex-1 flex flex-col items-center p-4 rounded-2xl border-4 transition-all border-gray-200 bg-gray-50 hover:bg-gray-100">
+                  <i class="ph ph-users text-5xl mb-2 text-gray-400"></i>
+                  <span class="font-bold text-lg">雙人分組對戰</span>
+                  <span class="text-sm text-gray-500 mt-1">課堂活動、同儕互動</span>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xl font-bold text-gray-800 mb-2">2. 遊戲題庫</label>
+              <div class="bg-orange-50 p-4 rounded-2xl border-2 border-orange-200 flex justify-between items-center transition-all hover:border-orange-300">
+                <div class="overflow-hidden pr-4">
+                  <p class="text-gray-700 font-bold text-lg mb-1">
+                    已載入 <span id="vocab-count-display" class="text-orange-600 text-2xl mx-1">0</span> 個生詞
+                  </p>
+                  <p id="vocab-preview-display" class="text-sm text-gray-500 truncate">...</p>
+                </div>
+                <button onclick="toggleEditVocab(true)" class="shrink-0 bg-white border-2 border-orange-300 text-orange-600 px-3 py-2 sm:px-4 sm:py-2 rounded-xl font-bold hover:bg-orange-100 transition-colors flex items-center gap-2">
+                  <i class="ph ph-pencil-simple text-xl"></i> <span class="hidden sm:inline">編輯題庫</span>
+                </button>
+              </div>
+            </div>
+
+            <button onclick="initGame()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-2xl py-4 rounded-2xl shadow-lg transform transition active:scale-95 flex justify-center items-center gap-2">
+              <i class="ph-fill ph-play-circle text-3xl"></i> 開始遊戲！
+            </button>
+          </div>
+        </div>
+
+        <!-- 編輯題庫畫面 -->
+        <div id="edit-vocab-view" class="fade-in hidden">
+          <h2 class="text-3xl font-black text-orange-600 mb-6 text-center tracking-wider">
+            📝 編輯生詞庫
+          </h2>
+          <div class="mb-4 flex flex-col sm:flex-row justify-between sm:items-end gap-2">
+            <label class="text-lg font-bold text-gray-800">
+              輸入生詞 <span class="text-sm font-normal text-gray-500">(以空格或逗號分隔)</span>
+            </label>
+            <span class="text-orange-700 font-bold bg-orange-100 px-4 py-1.5 rounded-full text-sm inline-block w-max border border-orange-200">
+              目前字數：<span id="edit-word-count">0</span> 字
+            </span>
+          </div>
+          <textarea id="vocab-input" oninput="updateVocabCount()" placeholder="請貼上或輸入生詞..." class="w-full h-64 p-4 border-2 border-gray-300 rounded-xl focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200 resize-none text-lg text-gray-700 leading-relaxed shadow-inner"></textarea>
+          <button onclick="toggleEditVocab(false)" class="mt-6 w-full bg-green-500 hover:bg-green-600 text-white font-bold text-xl py-4 rounded-2xl shadow-lg transform transition active:scale-95 flex justify-center items-center gap-2">
+            <i class="ph-bold ph-check text-2xl"></i> 完成編輯
+          </button>
+        </div>
+
+      </div>
+    </div>
+    <footer class="text-center text-gray-400 text-sm font-medium pt-4 w-full">
+      Powered by Gemini | Sophia老師的AI練習本
+    </footer>
+  </div>
+
+  <!-- ==================== 遊戲畫面 (Game Screen) ==================== -->
+  <div id="game-screen" class="hidden min-h-screen flex flex-col items-center py-4 sm:py-8 px-4 w-full relative">
+    
+    <!-- 標題列 -->
+    <div class="w-full max-w-4xl flex justify-between items-center mb-6">
+      <div class="flex gap-2">
+        <button onclick="returnToSetup()" class="bg-white text-gray-600 px-3 sm:px-4 py-2 rounded-xl shadow hover:bg-gray-50 font-bold flex items-center gap-2 transition-colors">
+          <i class="ph-bold ph-gear text-xl"></i> <span class="hidden sm:inline">重新設定</span>
+        </button>
+        <button id="btn-mute" onclick="toggleMute()" class="bg-green-50 text-green-600 hover:bg-green-100 px-3 sm:px-4 py-2 rounded-xl shadow font-bold flex items-center gap-2 transition-colors">
+          <i id="icon-mute" class="ph-bold ph-speaker-high text-xl"></i>
+          <span id="text-mute" class="hidden md:inline">語音開啟</span>
+        </button>
+      </div>
+      
+      <h1 class="text-2xl sm:text-3xl font-black text-orange-600 tracking-widest text-center hidden lg:block">漢字五子棋</h1>
+      
+      <div class="flex gap-2">
+        <button id="btn-fullscreen" onclick="toggleFullscreen()" class="bg-indigo-50 text-indigo-600 px-3 py-2 rounded-xl shadow hover:bg-indigo-100 font-bold flex items-center gap-2 transition-colors">
+          <i id="icon-fullscreen" class="ph-bold ph-corners-out text-xl"></i>
+          <span id="text-fullscreen" class="hidden md:inline">全螢幕</span>
+        </button>
+        <button onclick="initGame()" class="bg-orange-100 text-orange-700 px-3 sm:px-4 py-2 rounded-xl shadow hover:bg-orange-200 font-bold flex items-center gap-2 transition-colors">
+          <i class="ph-bold ph-arrow-counter-clockwise text-xl"></i> <span class="hidden sm:inline">重新開局</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 狀態列 (包含計分與計時) -->
+    <div class="bg-white rounded-2xl shadow-md p-3 sm:p-4 mb-4 sm:mb-8 w-full max-w-4xl flex justify-between items-center border-b-4 border-orange-200">
+      
+      <div id="player1-indicator" class="flex flex-col sm:flex-row items-center gap-1 sm:gap-3 px-3 sm:px-6 py-2 rounded-xl transition-all bg-gray-800 text-white shadow-lg scale-105 sm:scale-110">
+        <div class="hidden sm:block w-5 h-5 rounded-full bg-black border-2 border-gray-600"></div>
+        <span class="font-bold text-sm sm:text-xl">黑棋(玩家)</span>
+        <span id="score-p1" class="text-2xl sm:text-3xl font-black ml-0 sm:ml-2">0</span>
+      </div>
+      
+      <div class="flex flex-col items-center px-2">
+        <i class="ph-fill ph-timer text-xl sm:text-2xl text-orange-500 mb-0.5 sm:mb-1"></i>
+        <div id="timer-display" class="text-xl sm:text-3xl font-black text-orange-600 font-mono tracking-widest">
+          00:00
+        </div>
+      </div>
+      
+      <div id="player2-indicator" class="flex flex-col sm:flex-row-reverse items-center gap-1 sm:gap-3 px-3 sm:px-6 py-2 rounded-xl transition-all bg-gray-100 text-gray-500">
+        <div class="hidden sm:block w-5 h-5 rounded-full bg-white border-2 border-gray-300 shadow-inner"></div>
+        <span id="p2-name" class="font-bold text-sm sm:text-xl">白棋(電腦)</span>
+        <span id="score-p2" class="text-2xl sm:text-3xl font-black mr-0 sm:mr-2">0</span>
+      </div>
+    </div>
+
+    <!-- 棋盤區域 -->
+    <div class="bg-amber-700 p-2 sm:p-3 rounded-2xl shadow-2xl relative mx-auto" style="width: min(95vw, 650px);">
+      <!-- 棋盤背景 (木紋風格) -->
+      <div class="bg-amber-100 p-1 sm:p-2 rounded-xl shadow-inner border-2 border-amber-800/20">
+        <div id="board-container" class="grid gap-1 sm:gap-1.5" style="grid-template-columns: repeat(10, minmax(0, 1fr));">
+          <!-- 格子由 JS 動態生成 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部提示 -->
+    <div id="game-hint" class="mt-8 mb-4 text-gray-500 font-medium text-center flex-grow">
+      💡 提示：點擊格子放上棋子。電腦會自動讀出詞彙，請跟著大聲念喔！
+    </div>
+    
+    <!-- 頁尾 -->
+    <footer class="text-center text-gray-400 text-sm font-medium mt-auto w-full pb-2">
+      Powered by Gemini | Sophia老師的AI練習本
+    </footer>
+
+    <!-- 遊戲結束 Modal -->
+    <div id="gameover-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div class="bg-white rounded-3xl shadow-2xl p-10 text-center border-8 border-yellow-400 transform animate-bounce-short mx-4">
+        <i class="ph-fill ph-trophy text-7xl text-yellow-400 mx-auto mb-4 block"></i>
+        <h2 id="winner-text" class="text-4xl font-black text-gray-800 mb-2">黑棋 獲勝！</h2>
+        <p id="gameover-desc" class="text-xl text-gray-600 mb-8">太棒了！大家都學會好多新詞了！</p>
+        <button onclick="initGame()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-2xl py-3 px-10 rounded-2xl shadow-lg transform transition active:scale-95">
+          再玩一次
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== 核心變數與常數 ====================
+    const DEFAULT_VOCAB = "動物園, 老虎, 大象, 玩, 看到, 網路, 電話, 寫信, 說話, 影像, 外公, 外婆, 臺北, 臺南, 旅行, 退休, 舅舅, 紐約, 法國, 一次, 超級市場, 巧克力, 冰淇淋, 牛肉, 青菜, 糖果, 漢堡, 薯條, 週末, 晚餐, 蛋炒飯, 玉米湯, 舒服, 秋天, 春天, 新年, 恭喜, 紅包, 壓歲錢, 燈籠";
+    const BOARD_SIZE = 10;
+    
+    let gameState = 'setup'; // 'setup', 'playing', 'gameover'
+    let gameMode = 'pve'; // 'pvp', 'pve'
+    let isMuted = false;
+    let isFullscreen = false;
+    
+    let board = [];
+    let currentPlayer = 1; // 1: 黑, 2: 白
+    let winningLine = [];
+    let isComputerThinking = false;
+    
+    let scores = { 1: 0, 2: 0 };
+    let timeElapsed = 0;
+    let timerInterval = null;
+
+    // ==================== 初始化與設定 ====================
+    document.addEventListener('DOMContentLoaded', () => {
+      const vocabInputEl = document.getElementById('vocab-input');
+      vocabInputEl.value = DEFAULT_VOCAB;
+      updateVocabCount();
+      
+      // 監聽全螢幕變化
+      document.addEventListener('fullscreenchange', () => {
+        isFullscreen = !!document.fullscreenElement;
+        updateFullscreenUI();
+      });
+    });
+
+    function getWordList() {
+      const input = document.getElementById('vocab-input').value;
+      return input.split(/[\s,、\n]+/).filter(w => w.trim().length > 0);
+    }
+
+    function updateVocabCount() {
+      const list = getWordList();
+      const count = list.length;
+      document.getElementById('edit-word-count').innerText = count;
+      document.getElementById('vocab-count-display').innerText = count;
+      
+      const preview = list.slice(0, 5).join(', ') + (count > 5 ? '...' : '');
+      document.getElementById('vocab-preview-display').innerText = preview || '無生詞';
+    }
+
+    function toggleEditVocab(showEdit) {
+      const mainView = document.getElementById('main-setup-view');
+      const editView = document.getElementById('edit-vocab-view');
+      if (showEdit) {
+        mainView.classList.add('hidden');
+        editView.classList.remove('hidden');
+      } else {
+        editView.classList.add('hidden');
+        mainView.classList.remove('hidden');
+        updateVocabCount();
+      }
+    }
+
+    function setGameMode(mode) {
+      gameMode = mode;
+      scores = { 1: 0, 2: 0 }; // 切換模式時分數歸零
+      
+      const btnPve = document.getElementById('btn-mode-pve');
+      const btnPvp = document.getElementById('btn-mode-pvp');
+      const iconPve = btnPve.querySelector('i');
+      const iconPvp = btnPvp.querySelector('i');
+
+      if (mode === 'pve') {
+        btnPve.className = "flex-1 flex flex-col items-center p-4 rounded-2xl border-4 transition-all border-orange-500 bg-orange-100";
+        iconPve.className = "ph ph-monitor-play text-5xl mb-2 text-orange-500";
+        btnPvp.className = "flex-1 flex flex-col items-center p-4 rounded-2xl border-4 transition-all border-gray-200 bg-gray-50 hover:bg-gray-100";
+        iconPvp.className = "ph ph-users text-5xl mb-2 text-gray-400";
+      } else {
+        btnPvp.className = "flex-1 flex flex-col items-center p-4 rounded-2xl border-4 transition-all border-orange-500 bg-orange-100";
+        iconPvp.className = "ph ph-users text-5xl mb-2 text-orange-500";
+        btnPve.className = "flex-1 flex flex-col items-center p-4 rounded-2xl border-4 transition-all border-gray-200 bg-gray-50 hover:bg-gray-100";
+        iconPve.className = "ph ph-monitor-play text-5xl mb-2 text-gray-400";
+      }
+    }
+
+    // ==================== 遊戲核心邏輯 ====================
+    function initGame() {
+      // 1. 處理題庫
+      let words = getWordList();
+      if (words.length === 0) words = ['中文', '華語', '學習', '快樂'];
+
+      // 2. 生成防撞字棋盤
+      board = [];
+      for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+        const r = Math.floor(i / BOARD_SIZE);
+        const c = i % BOARD_SIZE;
+        
+        const adjacentWords = new Set();
+        if (r > 0 && c > 0) adjacentWords.add(board[(r - 1) * BOARD_SIZE + (c - 1)].word);
+        if (r > 0) adjacentWords.add(board[(r - 1) * BOARD_SIZE + c].word);
+        if (r > 0 && c < BOARD_SIZE - 1) adjacentWords.add(board[(r - 1) * BOARD_SIZE + (c + 1)].word);
+        if (c > 0) adjacentWords.add(board[r * BOARD_SIZE + (c - 1)].word);
+
+        let availableWords = words.filter(w => !adjacentWords.has(w));
+        if (availableWords.length === 0) availableWords = words;
+
+        const randomWord = availableWords[Math.floor(Math.random() * availableWords.length)];
+        board.push({ word: randomWord, owner: null });
+      }
+
+      // 3. 重設狀態
+      currentPlayer = 1;
+      winningLine = [];
+      isComputerThinking = false;
+      gameState = 'playing';
+      
+      // 4. 重設計計時器
+      timeElapsed = 0;
+      updateTimerDisplay();
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timeElapsed++;
+        updateTimerDisplay();
+      }, 1000);
+
+      // 5. 更新 UI
+      document.getElementById('setup-screen').classList.add('hidden');
+      document.getElementById('game-screen').classList.remove('hidden');
+      document.getElementById('gameover-modal').classList.add('hidden');
+      document.getElementById('p2-name').innerText = gameMode === 'pve' ? '白棋(電腦)' : '白棋(對手)';
+      document.getElementById('game-hint').innerText = gameMode === 'pve' 
+        ? '💡 提示：點擊格子放上棋子。電腦會自動讀出詞彙，請跟著大聲念喔！' 
+        : '💡 提示：點擊格子放上棋子。請大聲念出格子裡的字再下棋喔！';
+      
+      updateScoresUI();
+      renderBoard();
+      updatePlayerTurnUI();
+    }
+
+    function returnToSetup() {
+      gameState = 'setup';
+      scores = { 1: 0, 2: 0 };
+      if (timerInterval) clearInterval(timerInterval);
+      document.getElementById('game-screen').classList.add('hidden');
+      document.getElementById('setup-screen').classList.remove('hidden');
+    }
+
+    function handleCellClick(index) {
+      if (gameState !== 'playing' || board[index].owner !== null || isComputerThinking) return;
+
+      const word = board[index].word;
+      
+      // 語音播放
+      if (!isMuted) {
+         if (gameMode === 'pve' && currentPlayer === 1) {
+            speakText(word);
+         } else if (gameMode === 'pvp') {
+            speakText(word);
+         }
+      }
+
+      placePiece(index, currentPlayer);
+    }
+
+    function placePiece(index, player) {
+      board[index].owner = player;
+      
+      const winLine = checkWin(player);
+      if (winLine) {
+        winningLine = winLine;
+        scores[player]++;
+        endGame(player);
+        return;
+      }
+
+      // 檢查是否完全客滿 (傳統平手)
+      if (board.every(cell => cell.owner !== null)) {
+        endGame('draw');
+        return;
+      }
+
+      // 檢查是否雙方都已經「沒有路走」可以連成五子 (提早結束平手)
+      if (!checkPossibleWin(1) && !checkPossibleWin(2)) {
+        endGame('draw');
+        return;
+      }
+
+      // 切換玩家
+      currentPlayer = player === 1 ? 2 : 1;
+      updatePlayerTurnUI();
+      renderBoard(); // 更新棋盤視覺
+
+      if (gameMode === 'pve' && currentPlayer === 2) {
+        isComputerThinking = true;
+        setTimeout(() => aiMove(), 800); // 電腦思考 0.8 秒
+      }
+    }
+
+    function endGame(winner) {
+      gameState = 'gameover';
+      if (timerInterval) clearInterval(timerInterval);
+      updateScoresUI();
+      renderBoard(); // 畫出獲勝連線
+
+      const modal = document.getElementById('gameover-modal');
+      const winnerText = document.getElementById('winner-text');
+      const descText = document.getElementById('gameover-desc'); 
+      
+      if (winner === 'draw') {
+        winnerText.innerText = '平手！';
+        // 判斷是提早結束還是下滿結束
+        if (board.some(cell => cell.owner === null)) {
+          descText.innerText = '雙方都沒有機會連線了，提前結束平手！';
+        } else {
+          descText.innerText = '棋盤下滿了，雙方不分軒輊！';
+        }
+      } else {
+        winnerText.innerText = `${winner === 1 ? '黑棋' : '白棋'} 獲勝！`;
+        descText.innerText = '太棒了！大家都學會好多新詞了！';
+      }
+      
+      setTimeout(() => {
+        modal.classList.remove('hidden');
+      }, 500);
+    }
+
+    // ==================== UI 更新與渲染 ====================
+    function renderBoard() {
+      const container = document.getElementById('board-container');
+      container.innerHTML = '';
+
+      board.forEach((cell, index) => {
+        const isWinningCell = winningLine.includes(index);
+        
+        // 決定樣式
+        let pieceStyle = "bg-amber-50 hover:bg-amber-200";
+        let textStyle = "text-amber-900";
+        let interactionStyle = (cell.owner === null && currentPlayer === 1 && !isComputerThinking && gameState === 'playing') ? "cursor-pointer hover:scale-105" : "cursor-default";
+
+        if (cell.owner === 1) {
+          pieceStyle = "bg-gradient-to-br from-gray-700 to-black shadow-lg shadow-black/40 ring-2 ring-black/50";
+          textStyle = "text-white drop-shadow-md";
+        } else if (cell.owner === 2) {
+          pieceStyle = "bg-gradient-to-br from-white to-gray-200 shadow-lg shadow-black/20 ring-2 ring-gray-300";
+          textStyle = "text-gray-800 drop-shadow-sm";
+        }
+        
+        let winningStyle = isWinningCell ? "ring-4 ring-yellow-400 ring-offset-2 ring-offset-amber-100 animate-pulse z-20" : "";
+
+        // 建立元素
+        const el = document.createElement('div');
+        el.className = `relative flex items-center justify-center aspect-square rounded-full transition-all duration-300 ${pieceStyle} ${interactionStyle} ${winningStyle}`;
+        el.onclick = () => handleCellClick(index);
+
+        // 文字
+        const span = document.createElement('span');
+        span.className = `text-center font-bold px-0.5 sm:px-1 select-none pointer-events-none z-10 text-[clamp(0.6rem,2vw,1.1rem)] word-break-tight ${textStyle}`;
+        span.innerText = cell.word;
+        el.appendChild(span);
+
+        // 發音圖示提示 (僅在 PVE 且輪到玩家時顯示)
+        if (cell.owner === null && gameMode === 'pve' && currentPlayer === 1 && !isComputerThinking && !isMuted && gameState === 'playing') {
+          const iconDiv = document.createElement('div');
+          iconDiv.className = "absolute top-0.5 right-0.5 opacity-0 hover:opacity-100 md:hidden z-20";
+          iconDiv.innerHTML = '<i class="ph-fill ph-speaker-high w-3 h-3 text-amber-500/50"></i>';
+          // 模擬 group-hover 效果
+          el.onmouseenter = () => iconDiv.classList.replace('opacity-0', 'opacity-100');
+          el.onmouseleave = () => iconDiv.classList.replace('opacity-100', 'opacity-0');
+          el.appendChild(iconDiv);
+        }
+
+        container.appendChild(el);
+      });
+    }
+
+    function updatePlayerTurnUI() {
+      const p1 = document.getElementById('player1-indicator');
+      const p2 = document.getElementById('player2-indicator');
+      
+      if (currentPlayer === 1) {
+        p1.className = "flex flex-col sm:flex-row items-center gap-1 sm:gap-3 px-3 sm:px-6 py-2 rounded-xl transition-all bg-gray-800 text-white shadow-lg scale-105 sm:scale-110";
+        p2.className = "flex flex-col sm:flex-row-reverse items-center gap-1 sm:gap-3 px-3 sm:px-6 py-2 rounded-xl transition-all bg-gray-100 text-gray-500";
+      } else {
+        p2.className = "flex flex-col sm:flex-row-reverse items-center gap-1 sm:gap-3 px-3 sm:px-6 py-2 rounded-xl transition-all bg-blue-100 text-blue-800 shadow-lg scale-105 sm:scale-110";
+        p1.className = "flex flex-col sm:flex-row items-center gap-1 sm:gap-3 px-3 sm:px-6 py-2 rounded-xl transition-all bg-gray-100 text-gray-500";
+      }
+    }
+
+    function updateScoresUI() {
+      document.getElementById('score-p1').innerText = scores[1];
+      document.getElementById('score-p2').innerText = scores[2];
+    }
+
+    function updateTimerDisplay() {
+      const min = String(Math.floor(timeElapsed / 60)).padStart(2, '0');
+      const sec = String(timeElapsed % 60).padStart(2, '0');
+      document.getElementById('timer-display').innerText = `${min}:${sec}`;
+    }
+
+    // ==================== 五子棋演算法 ====================
+    function checkWin(player) {
+      const size = BOARD_SIZE;
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (board[r * size + c]?.owner !== player) continue;
+
+          // 橫向
+          if (c <= size - 5) {
+            const line = [0, 1, 2, 3, 4].map(i => r * size + c + i);
+            if (line.every(idx => board[idx]?.owner === player)) return line;
+          }
+          // 縱向
+          if (r <= size - 5) {
+            const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c);
+            if (line.every(idx => board[idx]?.owner === player)) return line;
+          }
+          // 右斜
+          if (r <= size - 5 && c <= size - 5) {
+            const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c + i);
+            if (line.every(idx => board[idx]?.owner === player)) return line;
+          }
+          // 左斜
+          if (r <= size - 5 && c >= 4) {
+            const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c - i);
+            if (line.every(idx => board[idx]?.owner === player)) return line;
+          }
+        }
+      }
+      return null;
+    }
+
+    // 檢查該玩家是否還有機會連成五子 (只要有一條線有 5 個空格+自己的棋子，就有機會)
+    function checkPossibleWin(player) {
+      const size = BOARD_SIZE;
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          // 橫向
+          if (c <= size - 5) {
+            const line = [0, 1, 2, 3, 4].map(i => r * size + c + i);
+            if (line.every(idx => board[idx].owner === player || board[idx].owner === null)) return true;
+          }
+          // 縱向
+          if (r <= size - 5) {
+            const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c);
+            if (line.every(idx => board[idx].owner === player || board[idx].owner === null)) return true;
+          }
+          // 右斜
+          if (r <= size - 5 && c <= size - 5) {
+            const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c + i);
+            if (line.every(idx => board[idx].owner === player || board[idx].owner === null)) return true;
+          }
+          // 左斜
+          if (r <= size - 5 && c >= 4) {
+            const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c - i);
+            if (line.every(idx => board[idx].owner === player || board[idx].owner === null)) return true;
+          }
+        }
+      }
+      return false; // 所有路都被堵死了
+    }
+
+    // 評估單一格子若落子的分數 (判斷活三、活四等棋型)
+    function evaluateCell(r, c, player) {
+      let score = 0;
+      const directions = [[1, 0], [0, 1], [1, 1], [1, -1]]; // 橫、直、右斜、左斜
+      
+      directions.forEach(dir => {
+        let count = 1; // 包含自己這步
+        let openEnds = 0;
+        let [dx, dy] = dir;
+
+        // 往前檢查
+        let r1 = r + dx, c1 = c + dy;
+        while (r1 >= 0 && r1 < BOARD_SIZE && c1 >= 0 && c1 < BOARD_SIZE && board[r1 * BOARD_SIZE + c1].owner === player) {
+          count++;
+          r1 += dx; c1 += dy;
+        }
+        // 檢查前端是否為空
+        if (r1 >= 0 && r1 < BOARD_SIZE && c1 >= 0 && c1 < BOARD_SIZE && board[r1 * BOARD_SIZE + c1].owner === null) openEnds++;
+
+        // 往後檢查
+        let r2 = r - dx, c2 = c - dy;
+        while (r2 >= 0 && r2 < BOARD_SIZE && c2 >= 0 && c2 < BOARD_SIZE && board[r2 * BOARD_SIZE + c2].owner === player) {
+          count++;
+          r2 -= dx; c2 -= dy;
+        }
+        // 檢查後端是否為空
+        if (r2 >= 0 && r2 < BOARD_SIZE && c2 >= 0 && c2 < BOARD_SIZE && board[r2 * BOARD_SIZE + c2].owner === null) openEnds++;
+
+        // 根據棋型給分
+        if (count >= 5) score += 100000; // 贏定了
+        else if (count === 4) {
+          if (openEnds === 2) score += 10000; // 活四 (必勝)
+          else if (openEnds === 1) score += 1000; // 衝四 (需防守)
+        }
+        else if (count === 3) {
+          if (openEnds === 2) score += 1000; // 活三 (威脅大，價值等同衝四)
+          else if (openEnds === 1) score += 100; // 眠三
+        }
+        else if (count === 2) {
+          if (openEnds === 2) score += 100; // 活二
+          else if (openEnds === 1) score += 10; // 眠二
+        }
+      });
+      return score;
+    }
+
+    // 更聰明的 AI 邏輯
+    function aiMove() {
+      if (gameState !== 'playing') return;
+      
+      let bestScore = -1;
+      let bestMoves = [];
+
+      // 遍歷每一個空格，評估落子分數
+      for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+        if (board[i].owner === null) {
+          const r = Math.floor(i / BOARD_SIZE);
+          const c = i % BOARD_SIZE;
+
+          // 攻擊分數 (AI 自己連線的價值)
+          const attackScore = evaluateCell(r, c, 2); 
+          // 防守分數 (阻止玩家連線的價值) - 防守權重調高 1.2 倍
+          const defenseScore = evaluateCell(r, c, 1); 
+
+          const totalScore = attackScore + defenseScore * 1.2;
+
+          if (totalScore > bestScore) {
+            bestScore = totalScore;
+            bestMoves = [i];
+          } else if (totalScore === bestScore && totalScore > 0) {
+            bestMoves.push(i);
+          }
+        }
+      }
+
+      let bestMove = -1;
+      
+      if (bestMoves.length > 0) {
+        // 從最高分的格子中隨機選一個 (讓 AI 下棋更有變化性)
+        bestMove = bestMoves[Math.floor(Math.random() * bestMoves.length)];
+      } else {
+        // 開局第一步或沒有明顯好棋時，優先下在中間區域
+        const centerMoves = [44, 45, 54, 55];
+        const availableCenters = centerMoves.filter(idx => board[idx].owner === null);
+        if (availableCenters.length > 0) {
+          bestMove = availableCenters[Math.floor(Math.random() * availableCenters.length)];
+        } else {
+          // 備用方案：隨機找空格
+          const emptyCells = [];
+          for (let i = 0; i < board.length; i++) if (board[i].owner === null) emptyCells.push(i);
+          if (emptyCells.length > 0) bestMove = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        }
+      }
+
+      if (bestMove !== -1) {
+        placePiece(bestMove, 2);
+      }
+      isComputerThinking = false;
+    }
+
+    // ==================== 輔助功能 (語音、全螢幕等) ====================
+    function speakText(text) {
+      if (isMuted) return;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-TW';
+        utterance.rate = 0.85;
+        utterance.pitch = 1.1;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      const btn = document.getElementById('btn-mute');
+      const icon = document.getElementById('icon-mute');
+      const text = document.getElementById('text-mute');
+
+      if (isMuted) {
+        btn.className = "bg-red-50 text-red-600 hover:bg-red-100 px-3 sm:px-4 py-2 rounded-xl shadow font-bold flex items-center gap-2 transition-colors";
+        icon.className = "ph-bold ph-speaker-slash text-xl";
+        text.innerText = "已靜音";
+      } else {
+        btn.className = "bg-green-50 text-green-600 hover:bg-green-100 px-3 sm:px-4 py-2 rounded-xl shadow font-bold flex items-center gap-2 transition-colors";
+        icon.className = "ph-bold ph-speaker-high text-xl";
+        text.innerText = "語音開啟";
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => console.log('Fullscreen error:', err));
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    function updateFullscreenUI() {
+      const icon = document.getElementById('icon-fullscreen');
+      const text = document.getElementById('text-fullscreen');
+      
+      if (isFullscreen) {
+        icon.className = "ph-bold ph-corners-in text-xl";
+        text.innerText = "退出";
+      } else {
+        icon.className = "ph-bold ph-corners-out text-xl";
+        text.innerText = "全螢幕";
+      }
+    }
+  </script>
+</body>
+</html>
