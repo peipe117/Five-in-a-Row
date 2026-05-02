@@ -57,7 +57,7 @@
 
     /* 空格子的凹槽雕刻文字效果 */
     .engraved-text {
-      color: #3b1c00; /* 換成極深的實木咖啡色，大幅提升對比與清晰度 */
+      color: #3b1c00; /* 極深的實木咖啡色，大幅提升對比與清晰度 */
       text-shadow: 0px 1px 1.5px rgba(255, 255, 255, 0.8); /* 加強底部的高光反光，維持雕刻立體感 */
       font-weight: 900; /* 強制使用最粗字體，避免筆畫在縮小時糊掉 */
     }
@@ -164,16 +164,24 @@
             <label class="text-lg font-bold text-gray-600">
               請貼上或輸入生詞 <span class="text-sm font-normal text-gray-400">(以空格或逗號分隔)</span>
             </label>
-            <span class="text-green-700 font-black bg-green-100 px-4 py-1.5 rounded-full text-sm inline-block w-max shadow-sm">
-              目前字數：<span id="edit-word-count" class="text-lg">0</span> 字
-            </span>
+            <div class="flex items-center gap-2">
+              <span id="auto-save-hint" class="text-gray-400 text-sm font-bold opacity-0 transition-opacity">已自動儲存</span>
+              <span class="text-green-700 font-black bg-green-100 px-4 py-1.5 rounded-full text-sm inline-block shadow-sm">
+                目前字數：<span id="edit-word-count" class="text-lg">0</span> 字
+              </span>
+            </div>
           </div>
           
           <textarea id="vocab-input" oninput="updateVocabCount()" class="w-full h-64 p-5 border-4 border-gray-100 rounded-2xl focus:border-green-400 focus:outline-none focus:ring-4 focus:ring-green-100 resize-none text-lg text-gray-700 leading-relaxed font-medium bg-gray-50 focus:bg-white transition-colors"></textarea>
           
-          <button onclick="toggleEditVocab(false)" class="btn-3d w-full bg-green-500 border-green-700 hover:bg-green-400 text-white font-black text-xl py-4 rounded-2xl flex justify-center items-center gap-2 mt-6">
-            <i class="ph-bold ph-check text-2xl"></i> 完成儲存
-          </button>
+          <div class="flex gap-3 mt-6">
+            <button onclick="restoreDefaultVocab()" class="btn-3d flex-1 bg-gray-200 border-gray-400 hover:bg-gray-300 text-gray-700 font-black text-lg sm:text-xl py-4 rounded-2xl flex justify-center items-center gap-2">
+              <i class="ph-bold ph-arrow-counter-clockwise text-2xl"></i> <span class="hidden sm:inline">恢復</span>預設
+            </button>
+            <button onclick="toggleEditVocab(false)" class="btn-3d flex-[2] bg-green-500 border-green-700 hover:bg-green-400 text-white font-black text-lg sm:text-xl py-4 rounded-2xl flex justify-center items-center gap-2">
+              <i class="ph-bold ph-check text-2xl"></i> 完成儲存
+            </button>
+          </div>
         </div>
 
       </div>
@@ -302,9 +310,16 @@
   </div>
 
   <script>
+    // ==================== 鎖定右鍵選單 ====================
+    // 避免學生誤觸右鍵或使用檢查工具干擾遊戲
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+    });
+
     // ==================== 核心變數與常數 ====================
     const DEFAULT_VOCAB = "動物園, 老虎, 大象, 玩, 看到, 網路, 電話, 寫信, 說話, 影像, 外公, 外婆, 臺北, 臺南, 旅行, 退休, 舅舅, 紐約, 法國, 一次, 超級市場, 巧克力, 冰淇淋, 牛肉, 青菜, 糖果, 漢堡, 薯條, 週末, 晚餐, 蛋炒飯, 玉米湯, 舒服, 秋天, 春天, 新年, 恭喜, 紅包, 壓歲錢, 燈籠";
     const BOARD_SIZE = 10;
+    const STORAGE_KEY = 'gomoku_vocab_save';
     
     let gameState = 'setup'; 
     let gameMode = 'pve'; 
@@ -319,11 +334,20 @@
     let scores = { 1: 0, 2: 0 };
     let timeElapsed = 0;
     let timerInterval = null;
+    let autoSaveTimeout = null;
 
     // ==================== 初始化與設定 ====================
     document.addEventListener('DOMContentLoaded', () => {
       const vocabInputEl = document.getElementById('vocab-input');
-      vocabInputEl.value = DEFAULT_VOCAB;
+      
+      // 讀取 Local Storage 紀錄，若無則使用預設題庫
+      const savedVocab = localStorage.getItem(STORAGE_KEY);
+      if (savedVocab !== null && savedVocab.trim() !== '') {
+        vocabInputEl.value = savedVocab;
+      } else {
+        vocabInputEl.value = DEFAULT_VOCAB;
+      }
+      
       updateVocabCount();
       
       document.addEventListener('fullscreenchange', () => {
@@ -338,6 +362,19 @@
     }
 
     function updateVocabCount() {
+      const inputVal = document.getElementById('vocab-input').value;
+      
+      // 自動儲存到 Local Storage
+      localStorage.setItem(STORAGE_KEY, inputVal);
+      
+      // 顯示已自動儲存的提示動畫
+      const hintEl = document.getElementById('auto-save-hint');
+      hintEl.classList.remove('opacity-0');
+      clearTimeout(autoSaveTimeout);
+      autoSaveTimeout = setTimeout(() => {
+        hintEl.classList.add('opacity-0');
+      }, 1500);
+
       const list = getWordList();
       const count = list.length;
       document.getElementById('edit-word-count').innerText = count;
@@ -345,6 +382,14 @@
       
       const preview = list.slice(0, 5).join(', ') + (count > 5 ? '...' : '');
       document.getElementById('vocab-preview-display').innerText = preview || '無生詞';
+    }
+
+    // 恢復預設題庫功能
+    function restoreDefaultVocab() {
+      if (confirm('確定要清除目前的題庫，並恢復為預設生詞嗎？')) {
+        document.getElementById('vocab-input').value = DEFAULT_VOCAB;
+        updateVocabCount();
+      }
     }
 
     function toggleEditVocab(showEdit) {
@@ -538,11 +583,9 @@
       board.forEach((cell, index) => {
         const isWinningCell = winningLine.includes(index);
         
-        // 基礎樣式設計
         let el = document.createElement('div');
         let span = document.createElement('span');
         
-        // 空格子的凹槽設計 (木頭刻印感)
         if (cell.owner === null) {
           let interactionStyle = (currentPlayer === 1 && !isComputerThinking && gameState === 'playing') 
             ? "cursor-pointer hover:bg-[#c98e4e] hover:shadow-[inset_0_4px_10px_rgba(0,0,0,0.3)]" 
@@ -553,7 +596,6 @@
           span.className = `text-center font-bold px-0.5 select-none pointer-events-none z-10 scalable-text engraved-text`;
           span.innerText = cell.word;
           
-          // 喇叭提示圖示
           if (gameMode === 'pve' && currentPlayer === 1 && !isComputerThinking && !isMuted && gameState === 'playing') {
             const iconDiv = document.createElement('div');
             iconDiv.className = "absolute top-[10%] right-[10%] opacity-0 hover:opacity-100 md:hidden z-20 transition-opacity";
@@ -563,7 +605,6 @@
             el.appendChild(iconDiv);
           }
         } 
-        // 玩家 1 (黑棋) - 立體曜石黑
         else if (cell.owner === 1) {
           el.className = `relative flex items-center justify-center aspect-square rounded-full transition-all duration-300 bg-[radial-gradient(circle_at_30%_30%,#52525b,#09090b)] shadow-[0_4px_8px_rgba(0,0,0,0.6),inset_-2px_-2px_6px_rgba(0,0,0,0.8),inset_2px_2px_6px_rgba(255,255,255,0.2)] cursor-default scale-[0.95]`;
           if (isWinningCell) el.classList.add('ring-4', 'ring-yellow-400', 'ring-offset-2', 'ring-offset-[#d29b59]', 'animate-pulse', 'z-20', 'scale-100');
@@ -571,7 +612,6 @@
           span.className = `text-center font-black px-0.5 select-none pointer-events-none z-10 scalable-text text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]`;
           span.innerText = cell.word;
         } 
-        // 玩家 2 (白棋) - 立體珍珠白
         else if (cell.owner === 2) {
           el.className = `relative flex items-center justify-center aspect-square rounded-full transition-all duration-300 bg-[radial-gradient(circle_at_30%_30%,#ffffff,#d4d4d8)] shadow-[0_4px_8px_rgba(0,0,0,0.3),inset_-2px_-2px_6px_rgba(0,0,0,0.1),inset_2px_2px_6px_rgba(255,255,255,0.8)] cursor-default scale-[0.95]`;
           if (isWinningCell) el.classList.add('ring-4', 'ring-yellow-400', 'ring-offset-2', 'ring-offset-[#d29b59]', 'animate-pulse', 'z-20', 'scale-100');
@@ -614,7 +654,7 @@
       document.getElementById('timer-display').innerText = `${min}:${sec}`;
     }
 
-    // ==================== 五子棋演算法 (保持不變) ====================
+    // ==================== 五子棋演算法 ====================
     function checkWin(player) {
       const size = BOARD_SIZE;
       for (let r = 0; r < size; r++) {
