@@ -16,13 +16,11 @@
 
   <style>
     body {
-      /* 預設繁體中文與英文的字型順序 */
       font-family: 'Nunito', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
       background: radial-gradient(circle at top right, #fff7ed, #ffedd5, #fed7aa);
       background-attachment: fixed;
     }
 
-    /* 當切換為簡體中文時，自動套用簡體專屬的標準字型與通用字型 */
     html[lang="zh-CN"] body {
       font-family: 'Nunito', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', '微软雅黑', sans-serif;
     }
@@ -46,7 +44,6 @@
     }
 
     .scalable-text {
-      font-size: clamp(10px, 2.3cqi, 28px);
       line-height: 1.1;
       word-break: break-all; 
       overflow-wrap: break-word;
@@ -79,58 +76,27 @@
       @page { size: A4 portrait; margin: 1cm; }
       body { background: white !important; color: black !important; }
       
-      #setup-screen, #gameover-modal, footer, .no-print { 
-        display: none !important; 
-      }
-      
-      #game-screen { 
-        display: block !important; 
-        padding: 0 !important; 
-      }
-
-      .print-header { 
-        display: block !important; 
-        margin-bottom: 20px !important;
-      }
-
-      #board-wrapper {
-        width: 17cm !important;
-        height: 17cm !important;
-        transform: none !important;
-        margin: 0 auto !important;
-      }
+      #setup-screen, #gameover-modal, footer, .no-print { display: none !important; }
+      #game-screen { display: block !important; padding: 0 !important; }
+      .print-header { display: block !important; margin-bottom: 20px !important; }
+      #board-wrapper { width: 17cm !important; height: 17cm !important; transform: none !important; margin: 0 auto !important; }
       
       #board-wrapper > div:first-child,
-      #board-wrapper > div:nth-child(2) > div:first-child {
-        display: none !important;
-      }
+      #board-wrapper > div:nth-child(2) > div:first-child { display: none !important; }
 
       #board-wrapper > div:nth-child(2) {
-        background: white !important;
-        border: 3px solid black !important;
-        padding: 10px !important;
-        border-radius: 12px !important; 
-        box-shadow: none !important;
+        background: white !important; border: 3px solid black !important;
+        padding: 10px !important; border-radius: 12px !important; box-shadow: none !important;
       }
-
       #board-container { gap: 4px !important; }
-
       #board-container > div {
-        background: white !important;
-        border: 2px solid #333 !important;
-        border-radius: 50% !important; 
-        transform: none !important;
-        box-shadow: none !important;
+        background: white !important; border: 2px solid #333 !important;
+        border-radius: 50% !important; transform: none !important; box-shadow: none !important;
       }
-
       #board-container span {
-        color: black !important;
-        text-shadow: none !important;
-        font-size: 13pt !important; 
-        font-weight: bold !important;
-        opacity: 1 !important;
+        color: black !important; text-shadow: none !important; font-size: 13pt !important; 
+        font-weight: bold !important; opacity: 1 !important;
       }
-
       #board-container i { display: none !important; }
     }
   </style>
@@ -148,7 +114,7 @@
     <div class="flex-1 flex items-center justify-center w-full my-4">
       <div class="glass-card rounded-[2rem] max-w-2xl w-full p-6 sm:p-10 transition-all relative">
         
-        <!-- 多語系選擇 (左上角) -->
+        <!-- 多語系選擇 -->
         <div class="absolute top-4 left-4 sm:top-6 sm:left-6 z-20">
           <select id="lang-select" onchange="changeLang(this.value)" class="bg-white border-2 border-gray-200 text-gray-600 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl font-bold outline-none cursor-pointer hover:bg-gray-50 transition-colors shadow-sm focus:border-orange-300 text-sm sm:text-base">
             <option value="zh-TW">繁體中文</option>
@@ -157,7 +123,7 @@
           </select>
         </div>
 
-        <!-- 教師專區按鈕 (右上角) -->
+        <!-- 教師專區按鈕 -->
         <div class="absolute top-4 right-4 sm:top-6 sm:right-6 z-20" id="teacher-btn-container">
           <button onclick="toggleEditVocab(true)" class="bg-orange-100 hover:bg-orange-200 text-orange-700 border-2 border-orange-200 px-3 py-1.5 sm:py-2 rounded-xl shadow-sm font-black flex items-center gap-2 transition-all active:scale-95">
             <i class="ph-bold ph-gear-six text-xl"></i> <span data-i18n="teacherZone" class="hidden sm:inline">教師專區</span>
@@ -176,7 +142,6 @@
             </h1>
             <p data-i18n="appSubtitle" class="text-gray-500 text-lg font-bold">讓孩子在遊戲中自然開口說華語！</p>
             
-            <!-- 新增：可點擊的規則標籤 -->
             <button onclick="toggleRules()" class="mt-4 inline-flex items-center gap-2 bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full font-bold text-sm hover:bg-yellow-200 transition-all shadow-sm active:scale-95 border border-yellow-200 mx-auto">
               <i class="ph-fill ph-info text-lg"></i>
               <span data-i18n="ruleTitle">遊戲說明</span>
@@ -184,8 +149,8 @@
             </button>
           </div>
 
-          <div class="space-y-8">
-            <!-- 遊戲規則說明 (預設隱藏) -->
+          <div class="space-y-6">
+            <!-- 遊戲規則說明 -->
             <div id="rules-container" class="hidden bg-yellow-50/80 p-4 sm:p-5 rounded-3xl shadow-sm border border-yellow-200 transition-all">
               <ul class="text-sm sm:text-base text-yellow-700 font-bold space-y-2 pl-2">
                 <li class="flex items-start gap-2">
@@ -247,10 +212,28 @@
               </div>
             </div>
 
-            <!-- 3. 題庫展示區 -->
+            <!-- 3. 棋盤大小選擇 -->
             <div class="bg-white/50 p-4 rounded-3xl shadow-sm border border-gray-100">
               <label class="flex items-center gap-2 text-xl font-black text-gray-700 mb-4 ml-2">
-                <i class="ph-fill ph-books text-orange-400"></i> <span id="step3-label" data-i18n="step3">3. 遊戲題庫</span>
+                <i class="ph-fill ph-grid-four text-orange-400"></i> <span data-i18n="step3Size">3. 棋盤大小</span>
+              </label>
+              <div class="flex flex-col sm:flex-row gap-3">
+                <button id="btn-size-8" onclick="setBoardSize(8)" class="flex-1 py-3 rounded-xl border-2 transition-all font-bold border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:border-gray-300">
+                  <span data-i18n="size8">8x8 (快速)</span>
+                </button>
+                <button id="btn-size-10" onclick="setBoardSize(10)" class="flex-1 py-3 rounded-xl border-2 transition-all font-black border-orange-400 bg-orange-50 ring-2 ring-orange-400/20 text-orange-700 shadow-sm">
+                  <span data-i18n="size10">10x10 (標準)</span>
+                </button>
+                <button id="btn-size-12" onclick="setBoardSize(12)" class="flex-1 py-3 rounded-xl border-2 transition-all font-bold border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:border-gray-300">
+                  <span data-i18n="size12">12x12 (挑戰)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 4. 題庫展示區 -->
+            <div class="bg-white/50 p-4 rounded-3xl shadow-sm border border-gray-100">
+              <label class="flex items-center gap-2 text-xl font-black text-gray-700 mb-4 ml-2">
+                <i class="ph-fill ph-books text-orange-400"></i> <span id="step4-label" data-i18n="step4">4. 遊戲題庫</span>
               </label>
               <div class="bg-white p-4 sm:p-5 rounded-2xl border-2 border-orange-100 flex flex-col justify-center items-start shadow-sm">
                 <div class="flex items-end gap-2 mb-2">
@@ -403,7 +386,8 @@
       <div class="absolute inset-0 bg-[#8b5a2b] rounded-[2rem] sm:rounded-[2.5rem] transform translate-y-3 sm:translate-y-4 shadow-[0_20px_40px_rgba(139,69,19,0.5)]"></div>
       <div class="relative bg-gradient-to-br from-[#eecda3] to-[#ef629f] p-2 sm:p-3.5 rounded-[2rem] sm:rounded-[2.5rem] border-4 sm:border-[6px] border-[#d29b59] shadow-[inset_0_0_30px_rgba(139,69,19,0.2)]">
         <div class="absolute inset-0 bg-[#DEB887]/90 rounded-[1.8rem] sm:rounded-[2.2rem]"></div>
-        <div id="board-container" class="relative grid gap-1 sm:gap-1.5 z-10" style="grid-template-columns: repeat(10, minmax(0, 1fr));">
+        <div id="board-container" class="relative grid gap-1 sm:gap-1.5 z-10">
+          <!-- 格子由 JS 動態生成 -->
         </div>
       </div>
     </div>
@@ -451,8 +435,9 @@
     const i18n = {
       'zh-TW': {
         appTitle: "漢字五子棋", appSubtitle: "讓孩子在遊戲中自然開口說華語！",
-        step1: "1. 選擇遊戲模式", step2: "2. 玩家設定 (選填)", step3: "3. 遊戲題庫", step3student: "3. 本次挑戰範圍",
+        step1: "1. 選擇遊戲模式", step2: "2. 玩家設定 (選填)", step3Size: "3. 棋盤大小", step4: "4. 遊戲題庫", step4student: "4. 本次挑戰範圍",
         modePvE: "挑戰電腦", modePvEDesc: "單人練習 • 語音帶讀", modePvP: "雙人對戰", modePvPDesc: "課堂活動 • 兩人同樂",
+        size8: "8x8 (快速)", size10: "10x10 (標準)", size12: "12x12 (挑戰)",
         p1Placeholder: "黑棋玩家姓名", p2Placeholder: "白棋玩家姓名", computer: "電腦",
         loaded: "已載入", vocabUnit: "個生詞",
         teacherZone: "教師專區", teacherDesc: "設定題庫並產生給學生的遊戲連結",
@@ -477,8 +462,9 @@
       },
       'zh-CN': {
         appTitle: "汉字五子棋", appSubtitle: "让孩子在游戏中自然开口说华语！",
-        step1: "1. 选择游戏模式", step2: "2. 玩家设置 (选填)", step3: "3. 游戏题库", step3student: "3. 本次挑战范围",
+        step1: "1. 选择游戏模式", step2: "2. 玩家设置 (选填)", step3Size: "3. 棋盘大小", step4: "4. 游戏题库", step4student: "4. 本次挑战范围",
         modePvE: "挑战电脑", modePvEDesc: "单人练习 • 语音带读", modePvP: "双人对战", modePvPDesc: "课堂活动 • 两人同乐",
+        size8: "8x8 (快速)", size10: "10x10 (标准)", size12: "12x12 (挑战)",
         p1Placeholder: "黑棋玩家姓名", p2Placeholder: "白棋玩家姓名", computer: "电脑",
         loaded: "已载入", vocabUnit: "个生词",
         teacherZone: "教师专区", teacherDesc: "设置题库并生成给学生的游戏链接",
@@ -503,8 +489,9 @@
       },
       'en': {
         appTitle: "Chinese Gomoku", appSubtitle: "Learn Chinese naturally through gameplay!",
-        step1: "1. Select Game Mode", step2: "2. Player Names (Optional)", step3: "3. Vocabulary List", step3student: "3. Challenge Words",
+        step1: "1. Select Game Mode", step2: "2. Player Names", step3Size: "3. Board Size", step4: "4. Vocabulary List", step4student: "4. Challenge Words",
         modePvE: "Vs Computer", modePvEDesc: "Solo Practice • Vocab Audio", modePvP: "2 Players", modePvPDesc: "Class Activity • Play Together",
+        size8: "8x8 (Fast)", size10: "10x10 (Normal)", size12: "12x12 (Hard)",
         p1Placeholder: "Player 1 (Black)", p2Placeholder: "Player 2 (White)", computer: "Computer",
         loaded: "Loaded", vocabUnit: "words",
         teacherZone: "Teacher Zone", teacherDesc: "Set vocab and generate student links",
@@ -529,7 +516,6 @@
       }
     };
     
-    // 預設詞庫依據語系自動對應
     const DEFAULT_VOCABS = {
       'zh-TW': "動物園, 老虎, 大象, 玩, 看到, 網路, 電話, 寫信, 說話, 影像, 外公, 外婆, 臺北, 臺南, 旅行, 退休, 舅舅, 紐約, 法國, 一次, 超級市場, 巧克力, 冰淇淋, 牛肉, 青菜, 糖果, 漢堡, 薯條, 週末, 晚餐, 蛋炒飯, 玉米湯, 舒服, 秋天, 春天, 新年, 恭喜, 紅包, 壓歲錢, 燈籠",
       'zh-CN': "动物园, 老虎, 大象, 玩, 看到, 网络, 电话, 写信, 说话, 影像, 外公, 外婆, 台北, 台南, 旅行, 退休, 舅舅, 纽约, 法国, 一次, 超级市场, 巧克力, 冰淇淋, 牛肉, 青菜, 糖果, 汉堡, 薯条, 周末, 晚餐, 蛋炒饭, 玉米汤, 舒服, 秋天, 春天, 新年, 恭喜, 红包, 压岁钱, 灯笼",
@@ -538,9 +524,7 @@
 
     let currentLang = 'zh-TW';
 
-    function t(key) {
-      return i18n[currentLang][key] || key;
-    }
+    function t(key) { return i18n[currentLang][key] || key; }
 
     function changeLang(lang) {
       currentLang = lang;
@@ -549,7 +533,6 @@
     }
 
     function applyTranslations() {
-      // 動態更新網頁語言標籤，以觸發對應的 CSS 簡繁體字型
       document.documentElement.lang = currentLang;
 
       document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -561,16 +544,17 @@
         if (i18n[currentLang][key]) el.placeholder = t(key);
       });
 
-      // 動態處理部分文字
       document.title = t('appTitle') + " | Sophia老師的AI練習本";
       const isStudentMode = new URLSearchParams(window.location.search).get('student') === '1';
-      document.getElementById('step3-label').innerText = isStudentMode ? t('step3student') : t('step3');
+      document.getElementById('step4-label').innerText = isStudentMode ? t('step4student') : t('step4');
       
       updateVocabCount();
       updateFullscreenUI();
       
-      // 更新遊戲內的動態名稱與提示
-      if (gameState === 'setup') setGameMode(gameMode);
+      if (gameState === 'setup') {
+        setGameMode(gameMode);
+        setBoardSize(boardSize);
+      }
       if (gameState === 'playing' || gameState === 'gameover') {
         const p1InputVal = document.getElementById('p1-name-input').value.trim();
         const p2InputVal = document.getElementById('p2-name-input').value.trim();
@@ -581,13 +565,12 @@
         document.getElementById('game-hint').innerText = gameMode === 'pve' ? t('hintPvE') : t('hintPvP');
       }
 
-      // 如果語音按鈕狀態
       const muteText = document.getElementById('text-mute');
       if (muteText) muteText.innerText = isMuted ? t('btnMute') : t('btnUnmute');
     }
 
     // ==================== 核心變數 ====================
-    const BOARD_SIZE = 10;
+    let boardSize = 10;
     const STORAGE_KEY = 'gomoku_vocab_save';
     
     let gameState = 'setup'; 
@@ -610,7 +593,6 @@
 
     // ==================== 初始化與設定 ====================
     document.addEventListener('DOMContentLoaded', () => {
-      // 語系載入
       const savedLang = localStorage.getItem('gomoku_lang');
       if (savedLang && i18n[savedLang]) {
         currentLang = savedLang;
@@ -625,7 +607,7 @@
 
       if (isStudentMode) {
           document.getElementById('teacher-btn-container').classList.add('hidden');
-          document.getElementById('step3-label').innerText = t('step3student');
+          document.getElementById('step4-label').innerText = t('step4student');
       }
 
       if (sharedVocab) {
@@ -647,6 +629,7 @@
       }
       
       updateVocabCount();
+      setBoardSize(10); // 預設 10x10
       
       document.addEventListener('fullscreenchange', () => {
         isFullscreen = !!document.fullscreenElement;
@@ -785,21 +768,34 @@
       }
     }
 
+    // 新增：設定棋盤大小
+    function setBoardSize(size) {
+      boardSize = size;
+      [8, 10, 12].forEach(s => {
+        const btn = document.getElementById(`btn-size-${s}`);
+        if (s === size) {
+          btn.className = "flex-1 py-3 rounded-xl border-2 transition-all font-black border-orange-400 bg-orange-50 ring-2 ring-orange-400/20 text-orange-700 shadow-sm";
+        } else {
+          btn.className = "flex-1 py-3 rounded-xl border-2 transition-all font-bold border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:border-gray-300";
+        }
+      });
+    }
+
     // ==================== 遊戲核心邏輯 ====================
     function initGame() {
       let words = getWordList();
       if (words.length === 0) words = ['中文', '华语', 'Happy']; // 簡單防呆
 
       board = [];
-      for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
-        const r = Math.floor(i / BOARD_SIZE);
-        const c = i % BOARD_SIZE;
+      for (let i = 0; i < boardSize * boardSize; i++) {
+        const r = Math.floor(i / boardSize);
+        const c = i % boardSize;
         
         const adjacentWords = new Set();
-        if (r > 0 && c > 0) adjacentWords.add(board[(r - 1) * BOARD_SIZE + (c - 1)].word);
-        if (r > 0) adjacentWords.add(board[(r - 1) * BOARD_SIZE + c].word);
-        if (r > 0 && c < BOARD_SIZE - 1) adjacentWords.add(board[(r - 1) * BOARD_SIZE + (c + 1)].word);
-        if (c > 0) adjacentWords.add(board[r * BOARD_SIZE + (c - 1)].word);
+        if (r > 0 && c > 0) adjacentWords.add(board[(r - 1) * boardSize + (c - 1)].word);
+        if (r > 0) adjacentWords.add(board[(r - 1) * boardSize + c].word);
+        if (r > 0 && c < boardSize - 1) adjacentWords.add(board[(r - 1) * boardSize + (c + 1)].word);
+        if (c > 0) adjacentWords.add(board[r * boardSize + (c - 1)].word);
 
         let availableWords = words.filter(w => !adjacentWords.has(w));
         if (availableWords.length === 0) availableWords = words;
@@ -920,7 +916,14 @@
     // ==================== UI 更新與渲染 ====================
     function renderBoard() {
       const container = document.getElementById('board-container');
+      
+      // 動態更新棋盤欄數與間距
+      container.style.gridTemplateColumns = `repeat(${boardSize}, minmax(0, 1fr))`;
+      
       container.innerHTML = '';
+
+      // 計算自適應字體大小 (例如 10x10 是 2.3cqi, 8x8 是 2.8cqi)
+      const dynamicFontSize = (23 / boardSize).toFixed(2);
 
       board.forEach((cell, index) => {
         const isWinningCell = winningLine.includes(index);
@@ -935,6 +938,7 @@
           el.className = `relative flex items-center justify-center aspect-square rounded-full transition-all duration-300 bg-[#d89f5c] shadow-[inset_0_3px_8px_rgba(100,50,0,0.35)] ${interactionStyle}`;
           
           span.className = `text-center font-bold px-0.5 select-none pointer-events-none z-10 scalable-text engraved-text`;
+          span.style.fontSize = `clamp(8px, ${dynamicFontSize}cqi, 28px)`;
           span.innerText = cell.word;
           
           if (gameMode === 'pve' && currentPlayer === 1 && !isComputerThinking && !isMuted && gameState === 'playing') {
@@ -950,12 +954,14 @@
           el.className = `relative flex items-center justify-center aspect-square rounded-full transition-all duration-300 bg-[radial-gradient(circle_at_30%_30%,#52525b,#09090b)] shadow-[0_4px_8px_rgba(0,0,0,0.6),inset_-2px_-2px_6px_rgba(0,0,0,0.8),inset_2px_2px_6px_rgba(255,255,255,0.2)] cursor-default scale-[0.95]`;
           if (isWinningCell) el.classList.add('ring-4', 'ring-yellow-400', 'ring-offset-2', 'ring-offset-[#d29b59]', 'animate-pulse', 'z-20', 'scale-100');
           span.className = `text-center font-black px-0.5 select-none pointer-events-none z-10 scalable-text text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]`;
+          span.style.fontSize = `clamp(8px, ${dynamicFontSize}cqi, 28px)`;
           span.innerText = cell.word;
         } 
         else if (cell.owner === 2) {
           el.className = `relative flex items-center justify-center aspect-square rounded-full transition-all duration-300 bg-[radial-gradient(circle_at_30%_30%,#ffffff,#d4d4d8)] shadow-[0_4px_8px_rgba(0,0,0,0.3),inset_-2px_-2px_6px_rgba(0,0,0,0.1),inset_2px_2px_6px_rgba(255,255,255,0.8)] cursor-default scale-[0.95]`;
           if (isWinningCell) el.classList.add('ring-4', 'ring-yellow-400', 'ring-offset-2', 'ring-offset-[#d29b59]', 'animate-pulse', 'z-20', 'scale-100');
           span.className = `text-center font-black px-0.5 select-none pointer-events-none z-10 scalable-text text-gray-700 drop-shadow-[0_1px_1px_rgba(255,255,255,1)]`;
+          span.style.fontSize = `clamp(8px, ${dynamicFontSize}cqi, 28px)`;
           span.innerText = cell.word;
         }
 
@@ -990,7 +996,7 @@
 
     // ==================== 五子棋演算法 ====================
     function checkWin(player) {
-      const size = BOARD_SIZE;
+      const size = boardSize;
       for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
           if (board[r * size + c]?.owner !== player) continue;
@@ -1004,7 +1010,7 @@
     }
 
     function checkPossibleWin(player) {
-      const size = BOARD_SIZE;
+      const size = boardSize;
       for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
           if (c <= size - 5) { const line = [0, 1, 2, 3, 4].map(i => r * size + c + i); if (line.every(idx => board[idx].owner === player || board[idx].owner === null)) return true; }
@@ -1022,11 +1028,11 @@
       directions.forEach(dir => {
         let count = 1; let openEnds = 0; let [dx, dy] = dir;
         let r1 = r + dx, c1 = c + dy;
-        while (r1 >= 0 && r1 < BOARD_SIZE && c1 >= 0 && c1 < BOARD_SIZE && board[r1 * BOARD_SIZE + c1].owner === player) { count++; r1 += dx; c1 += dy; }
-        if (r1 >= 0 && r1 < BOARD_SIZE && c1 >= 0 && c1 < BOARD_SIZE && board[r1 * BOARD_SIZE + c1].owner === null) openEnds++;
+        while (r1 >= 0 && r1 < boardSize && c1 >= 0 && c1 < boardSize && board[r1 * boardSize + c1].owner === player) { count++; r1 += dx; c1 += dy; }
+        if (r1 >= 0 && r1 < boardSize && c1 >= 0 && c1 < boardSize && board[r1 * boardSize + c1].owner === null) openEnds++;
         let r2 = r - dx, c2 = c - dy;
-        while (r2 >= 0 && r2 < BOARD_SIZE && c2 >= 0 && c2 < BOARD_SIZE && board[r2 * BOARD_SIZE + c2].owner === player) { count++; r2 -= dx; c2 -= dy; }
-        if (r2 >= 0 && r2 < BOARD_SIZE && c2 >= 0 && c2 < BOARD_SIZE && board[r2 * BOARD_SIZE + c2].owner === null) openEnds++;
+        while (r2 >= 0 && r2 < boardSize && c2 >= 0 && c2 < boardSize && board[r2 * boardSize + c2].owner === player) { count++; r2 -= dx; c2 -= dy; }
+        if (r2 >= 0 && r2 < boardSize && c2 >= 0 && c2 < boardSize && board[r2 * boardSize + c2].owner === null) openEnds++;
         
         if (count >= 5) score += 100000; 
         else if (count === 4) { if (openEnds === 2) score += 10000; else if (openEnds === 1) score += 1000; }
@@ -1039,9 +1045,9 @@
     function aiMove() {
       if (gameState !== 'playing') return;
       let bestScore = -1; let bestMoves = [];
-      for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+      for (let i = 0; i < boardSize * boardSize; i++) {
         if (board[i].owner === null) {
-          const r = Math.floor(i / BOARD_SIZE); const c = i % BOARD_SIZE;
+          const r = Math.floor(i / boardSize); const c = i % boardSize;
           const attackScore = evaluateCell(r, c, 2); 
           const defenseScore = evaluateCell(r, c, 1); 
           const totalScore = attackScore + defenseScore * 1.2;
@@ -1053,7 +1059,14 @@
       if (bestMoves.length > 0) {
         bestMove = bestMoves[Math.floor(Math.random() * bestMoves.length)];
       } else {
-        const centerMoves = [44, 45, 54, 55];
+        // 電腦開局動態尋找中心點
+        const half = Math.floor(boardSize / 2);
+        const centerMoves = [
+          (half - 1) * boardSize + (half - 1),
+          (half - 1) * boardSize + half,
+          half * boardSize + (half - 1),
+          half * boardSize + half
+        ];
         const availableCenters = centerMoves.filter(idx => board[idx].owner === null);
         if (availableCenters.length > 0) { bestMove = availableCenters[Math.floor(Math.random() * availableCenters.length)]; } 
         else {
@@ -1072,7 +1085,6 @@
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
-        // 設定語音：簡體介面用大陸口音，其餘(包含英文介面)使用台灣口音來朗讀華語
         utterance.lang = currentLang === 'zh-CN' ? 'zh-CN' : 'zh-TW';
         utterance.rate = 0.85;
         utterance.pitch = 1.1;
