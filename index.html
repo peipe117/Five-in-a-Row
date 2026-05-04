@@ -17,52 +17,41 @@
   <style>
     body {
       font-family: 'Nunito', 'Noto Sans TC', sans-serif;
-      /* 暖色漸層背景加上微微的紋理感 */
       background: radial-gradient(circle at top right, #fff7ed, #ffedd5, #fed7aa);
       background-attachment: fixed;
     }
 
-    /* 遊戲結束的彈跳動畫 */
+    /* 動畫效果 */
     @keyframes bounce-short {
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.05); }
     }
-    .animate-bounce-short {
-      animation: bounce-short 1.5s ease-in-out infinite;
-    }
-    
-    /* 畫面切換的淡入動畫 */
-    .fade-in {
-      animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
+    .animate-bounce-short { animation: bounce-short 1.5s ease-in-out infinite; }
+    .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px) scale(0.98); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    /* ================= 棋盤專屬視覺 ================= */
+    /* 棋盤專屬視覺 */
     #board-wrapper {
-      /* 棋盤自適應寬度 */
       width: min(95vw, 65vh, 800px);
       container-type: inline-size;
     }
 
     .scalable-text {
-      /* 字體動態縮放 */
       font-size: clamp(10px, 2.3cqi, 28px);
       line-height: 1.1;
       word-break: break-all; 
       overflow-wrap: break-word;
     }
 
-    /* 空格子的凹槽雕刻文字效果 */
     .engraved-text {
-      color: #3b1c00; /* 極深的實木咖啡色，大幅提升對比與清晰度 */
-      text-shadow: 0px 1px 1.5px rgba(255, 255, 255, 0.8); /* 加強底部的高光反光，維持雕刻立體感 */
-      font-weight: 900; /* 強制使用最粗字體，避免筆畫在縮小時糊掉 */
+      color: #3b1c00; 
+      text-shadow: 0px 1px 1.5px rgba(255, 255, 255, 0.8); 
+      font-weight: 900; 
     }
 
-    /* 立體按鈕下壓效果 */
     .btn-3d {
       transition: all 0.1s;
       border-bottom-width: 6px;
@@ -72,16 +61,90 @@
       transform: translateY(4px);
     }
     
-    /* 玻璃擬物風格卡片 */
     .glass-card {
       background: rgba(255, 255, 255, 0.85);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.5);
       box-shadow: 0 10px 30px rgba(234, 88, 12, 0.1);
     }
+
+    /* ==================== 列印專屬樣式 ==================== */
+    @media print {
+      @page { size: A4 portrait; margin: 1cm; }
+      body { background: white !important; color: black !important; }
+      
+      /* 隱藏網頁操作的 UI */
+      #setup-screen, #gameover-modal, footer, .no-print { 
+        display: none !important; 
+      }
+      
+      /* 強制顯示遊戲畫面，並移除邊距 */
+      #game-screen { 
+        display: block !important; 
+        padding: 0 !important; 
+      }
+
+      /* 顯示紙本專用標頭 */
+      .print-header { 
+        display: block !important; 
+        margin-bottom: 20px !important;
+      }
+
+      /* 將棋盤轉化為平面的紙本黑白框線格式 */
+      #board-wrapper {
+        width: 17cm !important;
+        height: 17cm !important;
+        transform: none !important;
+        margin: 0 auto !important;
+      }
+      
+      /* 隱藏 3D 陰影與木頭特效層 */
+      #board-wrapper > div:first-child,
+      #board-wrapper > div:nth-child(2) > div:first-child {
+        display: none !important;
+      }
+
+      /* 棋盤底色變白 */
+      #board-wrapper > div:nth-child(2) {
+        background: white !important;
+        border: 3px solid black !important;
+        padding: 10px !important;
+        border-radius: 12px !important; 
+        box-shadow: none !important;
+      }
+
+      #board-container { gap: 4px !important; }
+
+      /* 格子變成純白黑框 */
+      #board-container > div {
+        background: white !important;
+        border: 2px solid #333 !important;
+        border-radius: 50% !important; 
+        transform: none !important;
+        box-shadow: none !important;
+      }
+
+      /* 字體變成純黑，無視原本是黑棋還是白棋 */
+      #board-container span {
+        color: black !important;
+        text-shadow: none !important;
+        font-size: 13pt !important; 
+        font-weight: bold !important;
+        opacity: 1 !important;
+      }
+
+      /* 隱藏提示的喇叭 Icon */
+      #board-container i { display: none !important; }
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col text-gray-800">
+
+  <!-- 系統提示訊息 (Toast) -->
+  <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 -translate-y-10 bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-50 font-bold flex items-center gap-2">
+    <i class="ph-fill ph-check-circle text-green-400 text-2xl"></i>
+    <span id="toast-msg">已複製連結！快傳給學生吧！</span>
+  </div>
 
   <!-- ==================== 設定畫面 (Setup Screen) ==================== -->
   <div id="setup-screen" class="flex-1 flex flex-col items-center justify-between p-4 sm:p-6 w-full">
@@ -130,8 +193,8 @@
               <label class="flex items-center gap-2 text-xl font-black text-gray-700 mb-4 ml-2">
                 <i class="ph-fill ph-books text-orange-400"></i> 2. 遊戲題庫
               </label>
-              <div class="bg-white p-4 sm:p-5 rounded-2xl border-2 border-orange-100 flex justify-between items-center transition-all hover:border-orange-300 shadow-sm group">
-                <div class="overflow-hidden pr-4">
+              <div class="bg-white p-4 sm:p-5 rounded-2xl border-2 border-orange-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all hover:border-orange-300 shadow-sm group">
+                <div class="overflow-hidden w-full">
                   <div class="flex items-end gap-2 mb-1">
                     <p class="text-gray-400 font-bold">已載入</p>
                     <p class="text-orange-600 font-black text-3xl leading-none" id="vocab-count-display">0</p>
@@ -139,9 +202,15 @@
                   </div>
                   <p id="vocab-preview-display" class="text-sm text-gray-500 truncate font-medium bg-gray-50 px-3 py-1 rounded-lg inline-block max-w-full">...</p>
                 </div>
-                <button onclick="toggleEditVocab(true)" class="shrink-0 bg-orange-50 border-2 border-orange-200 text-orange-600 px-4 py-3 rounded-xl font-black group-hover:bg-orange-100 group-hover:border-orange-300 transition-colors flex items-center gap-2 active:scale-95">
-                  <i class="ph-bold ph-pencil-simple text-xl"></i> <span class="hidden sm:inline">編輯</span>
-                </button>
+                
+                <div class="flex gap-2 w-full sm:w-auto shrink-0 mt-2 sm:mt-0">
+                  <button onclick="toggleEditVocab(true)" class="flex-1 sm:flex-none bg-orange-50 border-2 border-orange-200 text-orange-600 px-4 py-2.5 rounded-xl font-black hover:bg-orange-100 hover:border-orange-300 transition-colors flex items-center justify-center gap-2 active:scale-95">
+                    <i class="ph-bold ph-pencil-simple text-xl"></i> <span class="sm:hidden lg:inline">編輯</span>
+                  </button>
+                  <button onclick="copyShareLink()" class="flex-[2] sm:flex-none bg-blue-50 border-2 border-blue-200 text-blue-600 px-4 py-2.5 rounded-xl font-black hover:bg-blue-100 hover:border-blue-300 transition-colors flex items-center justify-center gap-2 active:scale-95">
+                    <i class="ph-bold ph-share-network text-xl"></i> 分享給學生
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -186,7 +255,7 @@
 
       </div>
     </div>
-    <footer class="text-center text-orange-900/40 text-sm font-bold pt-4 w-full">
+    <footer class="no-print text-center text-orange-900/40 text-sm font-bold pt-4 w-full">
       Powered by Gemini | Sophia老師的AI練習本
     </footer>
   </div>
@@ -194,8 +263,26 @@
   <!-- ==================== 遊戲畫面 (Game Screen) ==================== -->
   <div id="game-screen" class="hidden min-h-screen flex flex-col items-center py-4 sm:py-6 px-2 sm:px-4 w-full relative">
     
-    <!-- 頂部控制列 -->
-    <div class="w-full max-w-5xl flex justify-between items-center mb-4 sm:mb-6 px-2">
+    <!-- 列印專用的抬頭標籤 (平時隱藏，列印時才顯示) -->
+    <div class="hidden print-header w-full max-w-4xl mx-auto text-center mt-8">
+      <h1 class="text-4xl font-black mb-6 tracking-widest text-black border-4 border-black inline-block px-10 py-3 rounded-2xl shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+        漢字五子棋 挑戰單
+      </h1>
+      <div class="flex justify-between text-xl font-bold border-b-4 border-black pb-3 px-4 mb-6">
+        <span>班級：_______________</span>
+        <span>姓名：_______________</span>
+        <span>日期：_______________</span>
+      </div>
+      <div class="text-left text-lg font-bold border-2 border-gray-400 p-4 rounded-xl bg-gray-50 mb-8 mx-2">
+        <p class="text-xl mb-2">🎯 遊戲規則：</p>
+        <p>1. 兩人輪流在圓圈內畫「Ｏ」或「Ｘ」，或是塗上不同顏色。</p>
+        <p>2. 下棋做記號前，<span class="underline">必須先大聲念出格子裡的生詞</span>，念對才可以下！</p>
+        <p>3. 誰先將五個記號連成一條線（橫向、直向、斜向皆可），誰就獲勝！</p>
+      </div>
+    </div>
+
+    <!-- 頂部控制列 (no-print) -->
+    <div class="w-full max-w-5xl flex justify-between items-center mb-4 sm:mb-6 px-2 no-print">
       <div class="flex gap-2 sm:gap-3">
         <button onclick="returnToSetup()" class="bg-white/80 backdrop-blur-sm text-gray-600 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm border border-white/50 hover:bg-white font-bold flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0">
           <i class="ph-bold ph-arrow-left text-xl"></i> <span class="hidden sm:inline">重新設定</span>
@@ -206,12 +293,14 @@
         </button>
       </div>
       
-      <h1 class="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600 tracking-widest text-center hidden lg:block drop-shadow-sm">漢字五子棋</h1>
-      
       <div class="flex gap-2 sm:gap-3">
         <button id="btn-fullscreen" onclick="toggleFullscreen()" class="bg-white/80 backdrop-blur-sm text-gray-600 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm border border-white/50 hover:bg-white font-bold flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0">
           <i id="icon-fullscreen" class="ph-bold ph-corners-out text-xl"></i>
           <span id="text-fullscreen" class="hidden md:inline">全螢幕</span>
+        </button>
+        <!-- 新增的列印按鈕 -->
+        <button onclick="window.print()" class="bg-blue-500 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-md border border-blue-400 hover:bg-blue-400 font-bold flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0">
+          <i class="ph-bold ph-printer text-xl"></i> <span class="hidden sm:inline">列印紙本</span>
         </button>
         <button onclick="initGame()" class="bg-orange-500 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-md border border-orange-400 hover:bg-orange-400 font-bold flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0">
           <i class="ph-bold ph-arrows-clockwise text-xl"></i> <span class="hidden sm:inline">重新開局</span>
@@ -219,9 +308,8 @@
       </div>
     </div>
 
-    <!-- 狀態列 (包含計分與計時) -->
-    <div class="glass-card rounded-2xl p-2 sm:p-3 mb-4 sm:mb-6 w-full max-w-5xl flex justify-between items-stretch">
-      
+    <!-- 狀態列 (no-print) -->
+    <div class="glass-card rounded-2xl p-2 sm:p-3 mb-4 sm:mb-6 w-full max-w-5xl flex justify-between items-stretch no-print">
       <!-- 黑棋玩家狀態 -->
       <div id="player1-indicator" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 px-2 sm:px-6 py-2 sm:py-3 rounded-xl transition-all duration-300">
         <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-gray-600 to-black shadow-[0_4px_6px_rgba(0,0,0,0.5)] border border-gray-700 flex items-center justify-center">
@@ -244,7 +332,7 @@
         </div>
       </div>
       
-      <!-- 白棋電腦/玩家狀態 -->
+      <!-- 白棋狀態 -->
       <div id="player2-indicator" class="flex-1 flex flex-col sm:flex-row-reverse items-center justify-center gap-2 sm:gap-4 px-2 sm:px-6 py-2 sm:py-3 rounded-xl transition-all duration-300">
         <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-white to-gray-200 shadow-[0_4px_6px_rgba(0,0,0,0.3)] border border-gray-300 flex items-center justify-center">
           <i id="p2-icon" class="ph-fill ph-robot text-gray-500 text-sm sm:text-base"></i>
@@ -259,38 +347,31 @@
 
     <!-- === 實體木頭質感棋盤 === -->
     <div id="board-wrapper" class="relative mx-auto transform transition-transform duration-500">
-      <!-- 木頭底座 (厚度與外陰影) -->
       <div class="absolute inset-0 bg-[#8b5a2b] rounded-[2rem] sm:rounded-[2.5rem] transform translate-y-3 sm:translate-y-4 shadow-[0_20px_40px_rgba(139,69,19,0.5)]"></div>
-      
-      <!-- 棋盤表面 (淺木紋色與內陰影) -->
       <div class="relative bg-gradient-to-br from-[#eecda3] to-[#ef629f] p-2 sm:p-3.5 rounded-[2rem] sm:rounded-[2.5rem] border-4 sm:border-[6px] border-[#d29b59] shadow-[inset_0_0_30px_rgba(139,69,19,0.2)]">
-        <!-- 避免漸層太粉，覆蓋一層半透明木頭色 -->
         <div class="absolute inset-0 bg-[#DEB887]/90 rounded-[1.8rem] sm:rounded-[2.2rem]"></div>
         
-        <!-- 網格容器 -->
         <div id="board-container" class="relative grid gap-1 sm:gap-1.5 z-10" style="grid-template-columns: repeat(10, minmax(0, 1fr));">
           <!-- 格子由 JS 動態生成 -->
         </div>
       </div>
     </div>
 
-    <!-- 底部提示 -->
-    <div class="mt-8 mb-4 bg-white/60 backdrop-blur-sm px-6 py-3 rounded-full shadow-sm border border-white">
+    <!-- 底部提示 (no-print) -->
+    <div class="mt-8 mb-4 bg-white/60 backdrop-blur-sm px-6 py-3 rounded-full shadow-sm border border-white no-print">
       <p id="game-hint" class="text-gray-600 font-bold text-center flex items-center gap-2">
         <i class="ph-fill ph-lightbulb text-yellow-500 text-xl"></i>
         <span>電腦會自動讀出詞彙，請跟著大聲念喔！</span>
       </p>
     </div>
     
-    <!-- 頁尾 -->
-    <footer class="text-center text-orange-900/40 text-sm font-bold mt-auto w-full pb-2">
+    <footer class="no-print text-center text-orange-900/40 text-sm font-bold mt-auto w-full pb-2">
       Powered by Gemini | Sophia老師的AI練習本
     </footer>
 
     <!-- 遊戲結束 Modal -->
     <div id="gameover-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
       <div class="bg-white rounded-[2.5rem] shadow-2xl p-10 sm:p-12 text-center border-8 border-orange-400 transform animate-bounce-short mx-4 max-w-md w-full relative overflow-hidden">
-        <!-- 裝飾背景 -->
         <div class="absolute -top-20 -right-20 w-48 h-48 bg-orange-100 rounded-full blur-3xl opacity-50"></div>
         <div class="absolute -bottom-20 -left-20 w-48 h-48 bg-yellow-100 rounded-full blur-3xl opacity-50"></div>
         
@@ -311,7 +392,6 @@
 
   <script>
     // ==================== 鎖定右鍵選單 ====================
-    // 避免學生誤觸右鍵或使用檢查工具干擾遊戲
     document.addEventListener('contextmenu', function(e) {
       e.preventDefault();
     });
@@ -327,7 +407,7 @@
     let isFullscreen = false;
     
     let board = [];
-    let currentPlayer = 1; // 1: 黑, 2: 白
+    let currentPlayer = 1; 
     let winningLine = [];
     let isComputerThinking = false;
     
@@ -340,12 +420,22 @@
     document.addEventListener('DOMContentLoaded', () => {
       const vocabInputEl = document.getElementById('vocab-input');
       
-      // 讀取 Local Storage 紀錄，若無則使用預設題庫
-      const savedVocab = localStorage.getItem(STORAGE_KEY);
-      if (savedVocab !== null && savedVocab.trim() !== '') {
-        vocabInputEl.value = savedVocab;
+      const urlParams = new URLSearchParams(window.location.search);
+      const sharedVocab = urlParams.get('vocab');
+
+      if (sharedVocab) {
+        vocabInputEl.value = sharedVocab;
+        showToast("已成功載入老師分享的題庫！");
+        if (window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
       } else {
-        vocabInputEl.value = DEFAULT_VOCAB;
+        const savedVocab = localStorage.getItem(STORAGE_KEY);
+        if (savedVocab !== null && savedVocab.trim() !== '') {
+          vocabInputEl.value = savedVocab;
+        } else {
+          vocabInputEl.value = DEFAULT_VOCAB;
+        }
       }
       
       updateVocabCount();
@@ -356,6 +446,47 @@
       });
     });
 
+    // ==================== 分享連結功能 ====================
+    function copyShareLink() {
+      const currentVocab = document.getElementById('vocab-input').value;
+      const encodedVocab = encodeURIComponent(currentVocab);
+      const shareUrl = window.location.origin + window.location.pathname + '?vocab=' + encodedVocab;
+      
+      const textArea = document.createElement("textarea");
+      textArea.value = shareUrl;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      try {
+          document.execCommand('copy');
+          document.getElementById('toast-msg').innerText = "已複製連結！快傳給學生吧！";
+          showToast();
+      } catch (err) {
+          console.error('複製失敗', err);
+          alert("複製失敗，請手動選取網址列分享");
+      }
+      document.body.removeChild(textArea);
+    }
+
+    function showToast(customMsg) {
+      const toast = document.getElementById('toast');
+      if (customMsg) {
+          document.getElementById('toast-msg').innerText = customMsg;
+      }
+      toast.classList.remove('opacity-0', '-translate-y-10');
+      toast.classList.add('translate-y-0');
+      
+      setTimeout(() => {
+          toast.classList.add('opacity-0', '-translate-y-10');
+          toast.classList.remove('translate-y-0');
+      }, 3000);
+    }
+
+    // ==================== 題庫相關邏輯 ====================
     function getWordList() {
       const input = document.getElementById('vocab-input').value;
       return input.split(/[\s,、\n]+/).filter(w => w.trim().length > 0);
@@ -364,16 +495,16 @@
     function updateVocabCount() {
       const inputVal = document.getElementById('vocab-input').value;
       
-      // 自動儲存到 Local Storage
       localStorage.setItem(STORAGE_KEY, inputVal);
       
-      // 顯示已自動儲存的提示動畫
       const hintEl = document.getElementById('auto-save-hint');
-      hintEl.classList.remove('opacity-0');
-      clearTimeout(autoSaveTimeout);
-      autoSaveTimeout = setTimeout(() => {
-        hintEl.classList.add('opacity-0');
-      }, 1500);
+      if(hintEl) {
+        hintEl.classList.remove('opacity-0');
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+          hintEl.classList.add('opacity-0');
+        }, 1500);
+      }
 
       const list = getWordList();
       const count = list.length;
@@ -384,7 +515,6 @@
       document.getElementById('vocab-preview-display').innerText = preview || '無生詞';
     }
 
-    // 恢復預設題庫功能
     function restoreDefaultVocab() {
       if (confirm('確定要清除目前的題庫，並恢復為預設生詞嗎？')) {
         document.getElementById('vocab-input').value = DEFAULT_VOCAB;
@@ -412,23 +542,19 @@
       const btnPve = document.getElementById('btn-mode-pve');
       const btnPvp = document.getElementById('btn-mode-pvp');
       
-      // 重置雙方樣式
       btnPve.className = "flex-1 flex flex-col items-center p-5 rounded-2xl border-2 transition-all border-gray-200 bg-white hover:bg-gray-50 text-gray-400 hover:text-gray-500";
       btnPvp.className = "flex-1 flex flex-col items-center p-5 rounded-2xl border-2 transition-all border-gray-200 bg-white hover:bg-gray-50 text-gray-400 hover:text-gray-500";
       
-      // 更新 icon 容器背景
       btnPve.querySelector('div').className = "bg-gray-50 p-3 rounded-full mb-3";
       btnPve.querySelector('i').className = "ph-fill ph-robot text-4xl current-color";
       btnPvp.querySelector('div').className = "bg-gray-50 p-3 rounded-full mb-3";
       btnPvp.querySelector('i').className = "ph-fill ph-users-three text-4xl current-color";
       
-      // 隱藏副標題特殊顏色
       btnPve.querySelector('span:last-child').className = "text-sm mt-1 font-bold";
       btnPvp.querySelector('span:last-child').className = "text-sm mt-1 font-bold";
       btnPve.querySelector('span:first-of-type').className = "font-black text-xl";
       btnPvp.querySelector('span:first-of-type').className = "font-black text-xl";
 
-      // 設置被選中的按鈕樣式 (高亮)
       const activeBtn = mode === 'pve' ? btnPve : btnPvp;
       activeBtn.className = "flex-1 flex flex-col items-center p-5 rounded-2xl border-2 transition-all border-orange-400 bg-orange-50 ring-4 ring-orange-400/20 shadow-md transform scale-[1.02]";
       activeBtn.querySelector('div').className = "bg-white p-3 rounded-full shadow-sm mb-3";
