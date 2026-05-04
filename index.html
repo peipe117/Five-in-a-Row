@@ -409,24 +409,39 @@
 
     <!-- 遊戲結束 Modal -->
     <div id="gameover-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
-      <div class="bg-white rounded-[2.5rem] shadow-2xl p-10 sm:p-12 text-center border-8 border-orange-400 transform animate-bounce-short mx-4 max-w-md w-full relative overflow-hidden">
+      <div class="bg-white rounded-[2.5rem] shadow-2xl p-6 sm:p-10 text-center border-8 border-orange-400 transform animate-bounce-short mx-4 max-w-md w-full relative overflow-hidden">
         <div class="absolute -top-20 -right-20 w-48 h-48 bg-orange-100 rounded-full blur-3xl opacity-50"></div>
         <div class="absolute -bottom-20 -left-20 w-48 h-48 bg-yellow-100 rounded-full blur-3xl opacity-50"></div>
         
         <div class="relative z-10">
-          <i id="modal-icon" class="ph-fill ph-trophy text-[6rem] text-orange-500 mx-auto mb-6 block drop-shadow-lg"></i>
-          <h2 id="winner-text" class="text-4xl sm:text-5xl font-black text-gray-800 mb-4 tracking-wider">獲勝！</h2>
-          <p id="gameover-desc" class="text-xl text-gray-600 mb-8 font-bold">太棒了！大家都學會好多新詞了！</p>
+          <i id="modal-icon" class="ph-fill ph-trophy text-[5rem] sm:text-[6rem] text-orange-500 mx-auto mb-4 block drop-shadow-lg"></i>
+          <h2 id="winner-text" class="text-3xl sm:text-4xl font-black text-gray-800 mb-2 tracking-wider">獲勝！</h2>
+          <p id="gameover-desc" class="text-lg sm:text-xl text-gray-600 mb-6 font-bold">太棒了！大家都學會好多新詞了！</p>
           
-          <button onclick="initGame()" class="btn-3d w-full bg-orange-500 border-orange-700 hover:bg-orange-400 text-white font-black text-2xl py-4 rounded-2xl shadow-lg flex justify-center items-center gap-2">
-            <i class="ph-bold ph-arrows-clockwise text-3xl"></i> <span data-i18n="btnPlayAgain">再玩一次</span>
+          <!-- 新增：賽局比分板 -->
+          <div class="flex justify-center items-center gap-2 sm:gap-6 mb-6 bg-gray-50/80 p-3 sm:p-4 rounded-2xl border-2 border-gray-200 shadow-inner">
+            <div class="flex-1 text-center overflow-hidden">
+              <span data-i18n="p1Default" class="block text-xs sm:text-sm text-gray-500 font-bold mb-1">黑棋</span>
+              <span id="modal-p1-name" class="block text-lg sm:text-xl font-black text-gray-800 truncate px-1">Player 1</span>
+              <span id="modal-p1-score" class="block text-3xl sm:text-4xl font-black text-orange-500 mt-1">0</span>
+            </div>
+            <div class="text-xl sm:text-2xl font-black text-gray-300 shrink-0">VS</div>
+            <div class="flex-1 text-center overflow-hidden">
+              <span data-i18n="p2Default" class="block text-xs sm:text-sm text-gray-500 font-bold mb-1">白棋</span>
+              <span id="modal-p2-name" class="block text-lg sm:text-xl font-black text-gray-800 truncate px-1">Player 2</span>
+              <span id="modal-p2-score" class="block text-3xl sm:text-4xl font-black text-blue-500 mt-1">0</span>
+            </div>
+          </div>
+          
+          <button onclick="initGame()" class="btn-3d w-full bg-orange-500 border-orange-700 hover:bg-orange-400 text-white font-black text-xl sm:text-2xl py-3 sm:py-4 rounded-2xl shadow-lg flex justify-center items-center gap-2">
+            <i class="ph-bold ph-arrows-clockwise text-2xl sm:text-3xl"></i> <span data-i18n="btnPlayAgain">再玩一次</span>
           </button>
           
-          <button onclick="undoMove()" class="mt-3 btn-3d w-full bg-gray-500 border-gray-700 hover:bg-gray-400 text-white font-black text-xl py-3 rounded-2xl shadow-md flex justify-center items-center gap-2">
-            <i class="ph-bold ph-arrow-u-up-left text-2xl"></i> <span data-i18n="btnUndo">回上一步</span>
+          <button onclick="undoMove()" class="mt-3 btn-3d w-full bg-gray-500 border-gray-700 hover:bg-gray-400 text-white font-black text-lg sm:text-xl py-2.5 sm:py-3 rounded-2xl shadow-md flex justify-center items-center gap-2">
+            <i class="ph-bold ph-arrow-u-up-left text-xl sm:text-2xl"></i> <span data-i18n="btnUndo">回上一步</span>
           </button>
           
-          <button onclick="returnToSetup()" class="mt-5 text-gray-400 font-bold hover:text-gray-600 transition-colors">
+          <button onclick="returnToSetup()" class="mt-4 text-gray-400 font-bold hover:text-gray-600 transition-colors">
             <span data-i18n="btnHome">返回首頁</span>
           </button>
         </div>
@@ -958,7 +973,7 @@
       
       if (winner === 'draw') {
         winnerText.innerText = t('drawText');
-        modalIcon.className = "ph-fill ph-handshake text-[6rem] text-blue-400 mx-auto mb-6 block drop-shadow-lg";
+        modalIcon.className = "ph-fill ph-handshake text-[5rem] sm:text-[6rem] text-blue-400 mx-auto mb-4 block drop-shadow-lg";
         if (board.some(cell => cell.owner === null)) {
           descText.innerText = t('drawDesc1');
         } else {
@@ -967,9 +982,15 @@
       } else {
         const winnerName = winner === 1 ? p1Name : p2Name;
         winnerText.innerText = `${winnerName} ${t('winText')}`;
-        modalIcon.className = "ph-fill ph-trophy text-[6rem] text-orange-500 mx-auto mb-6 block drop-shadow-lg";
+        modalIcon.className = "ph-fill ph-trophy text-[5rem] sm:text-[6rem] text-orange-500 mx-auto mb-4 block drop-shadow-lg";
         descText.innerText = t('winDesc');
       }
+      
+      // 新增：動態將玩家名字與最新比分更新到賽果計分板中
+      document.getElementById('modal-p1-name').innerText = p1Name;
+      document.getElementById('modal-p2-name').innerText = p2Name;
+      document.getElementById('modal-p1-score').innerText = scores[1];
+      document.getElementById('modal-p2-score').innerText = scores[2];
       
       gameoverTimeout = setTimeout(() => {
         modal.classList.remove('hidden');
