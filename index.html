@@ -175,9 +175,34 @@
               漢字五子棋
             </h1>
             <p data-i18n="appSubtitle" class="text-gray-500 text-lg font-bold">讓孩子在遊戲中自然開口說華語！</p>
+            
+            <!-- 新增：可點擊的規則標籤 -->
+            <button onclick="toggleRules()" class="mt-4 inline-flex items-center gap-2 bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full font-bold text-sm hover:bg-yellow-200 transition-all shadow-sm active:scale-95 border border-yellow-200 mx-auto">
+              <i class="ph-fill ph-info text-lg"></i>
+              <span data-i18n="ruleTitle">遊戲說明</span>
+              <i id="rules-chevron" class="ph-bold ph-caret-down transition-transform duration-300"></i>
+            </button>
           </div>
 
           <div class="space-y-8">
+            <!-- 遊戲規則說明 (預設隱藏) -->
+            <div id="rules-container" class="hidden bg-yellow-50/80 p-4 sm:p-5 rounded-3xl shadow-sm border border-yellow-200 transition-all">
+              <ul class="text-sm sm:text-base text-yellow-700 font-bold space-y-2 pl-2">
+                <li class="flex items-start gap-2">
+                  <i class="ph-bold ph-number-circle-one text-lg text-yellow-500 shrink-0 mt-0.5"></i>
+                  <span data-i18n="rule1">雙人或與電腦輪流下棋。</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="ph-bold ph-number-circle-two text-lg text-yellow-500 shrink-0 mt-0.5"></i>
+                  <span><span data-i18n="rule2a">下棋前，</span><span data-i18n="rule2b" class="text-red-500 underline">必須大聲念出格子裡的生詞</span><span data-i18n="rule2c">！</span></span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="ph-bold ph-number-circle-three text-lg text-yellow-500 shrink-0 mt-0.5"></i>
+                  <span data-i18n="rule3">先將五個棋子連成一線就獲勝！</span>
+                </li>
+              </ul>
+            </div>
+
             <!-- 1. 遊戲模式選擇 -->
             <div class="bg-white/50 p-4 rounded-3xl shadow-sm border border-gray-100">
               <label class="flex items-center gap-2 text-xl font-black text-gray-700 mb-4 ml-2">
@@ -447,7 +472,8 @@
         printRule2: "2. 下棋做記號前，", printRule2u: "必須先大聲念出格子裡的生詞", printRule2_2: "，念對才可以下！",
         printRule3: "3. 誰先將五個記號連成一條線（橫向、直向、斜向皆可），誰就獲勝！",
         toastCopied: "已複製學生專屬連結！快傳給學生吧！", toastLoadedShare: "已成功載入分享的題庫！", toastLoadedStudent: "已載入老師指定的題庫！祝你闖關順利！",
-        toastRestore: "確定要清除目前的題庫，並恢復為預設生詞嗎？", toastCopyFail: "複製失敗，請手動選取網址列分享", noWords: "無生詞"
+        toastRestore: "確定要清除目前的題庫，並恢復為預設生詞嗎？", toastCopyFail: "複製失敗，請手動選取網址列分享", noWords: "無生詞",
+        ruleTitle: "遊戲說明", rule1: "雙人或與電腦輪流下棋。", rule2a: "下棋前，", rule2b: "必須大聲念出格子裡的生詞", rule2c: "！", rule3: "先將五個棋子連成一線就獲勝！"
       },
       'zh-CN': {
         appTitle: "汉字五子棋", appSubtitle: "让孩子在游戏中自然开口说华语！",
@@ -472,7 +498,8 @@
         printRule2: "2. 下棋做记号前，", printRule2u: "必须先大声念出格子里的生词", printRule2_2: "，念对才可以下！",
         printRule3: "3. 谁先将五个记号连成一条线（横向、直向、斜向皆可），谁就获胜！",
         toastCopied: "已复制学生专属链接！快传给学生吧！", toastLoadedShare: "已成功载入分享的题库！", toastLoadedStudent: "已载入老师指定的题库！祝你闯关顺利！",
-        toastRestore: "确定要清除目前的题库，并恢复为默认生词吗？", toastCopyFail: "复制失败，请手动选取网址列分享", noWords: "无生词"
+        toastRestore: "确定要清除目前的题库，并恢复为默认生词吗？", toastCopyFail: "复制失败，请手动选取网址列分享", noWords: "无生词",
+        ruleTitle: "游戏说明", rule1: "双人或与电脑轮流下棋。", rule2a: "下棋前，", rule2b: "必须大声念出格子里的生词", rule2c: "！", rule3: "先将五个棋子连成一线就获胜！"
       },
       'en': {
         appTitle: "Chinese Gomoku", appSubtitle: "Learn Chinese naturally through gameplay!",
@@ -497,7 +524,8 @@
         printRule2: "2. Before marking, ", printRule2u: "you must read the word out loud", printRule2_2: ". You can only mark it if you read it correctly!",
         printRule3: "3. The first player to connect 5 marks in a row wins!",
         toastCopied: "Link copied! Share it with your students!", toastLoadedShare: "Shared vocabulary loaded successfully!", toastLoadedStudent: "Teacher's vocabulary loaded! Good luck!",
-        toastRestore: "Clear current words and restore defaults?", toastCopyFail: "Copy failed, please copy the URL manually.", noWords: "No words"
+        toastRestore: "Clear current words and restore defaults?", toastCopyFail: "Copy failed, please copy the URL manually.", noWords: "No words",
+        ruleTitle: "How to Play", rule1: "Take turns placing pieces with a friend or the computer.", rule2a: "Before playing, you ", rule2b: "MUST read the word out loud", rule2c: "!", rule3: "Connect 5 pieces in a row to win!"
       }
     };
     
@@ -1086,6 +1114,21 @@
       } else {
         icon.className = "ph-bold ph-corners-out text-xl";
         text.innerText = t('btnFull');
+      }
+    }
+
+    // ==================== 遊戲規則展開功能 ====================
+    function toggleRules() {
+      const rules = document.getElementById('rules-container');
+      const chevron = document.getElementById('rules-chevron');
+      if (rules.classList.contains('hidden')) {
+        rules.classList.remove('hidden');
+        rules.classList.add('fade-in');
+        chevron.classList.add('rotate-180');
+      } else {
+        rules.classList.add('hidden');
+        rules.classList.remove('fade-in');
+        chevron.classList.remove('rotate-180');
       }
     }
   </script>
