@@ -331,6 +331,9 @@
       <h1 data-i18n="appTitle" class="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600 tracking-widest text-center hidden lg:block drop-shadow-sm">漢字五子棋</h1>
       
       <div class="flex gap-2 sm:gap-3">
+        <button onclick="undoMove()" class="bg-white/80 backdrop-blur-sm text-gray-600 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm border border-white/50 hover:bg-gray-50 font-bold flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0">
+          <i class="ph-bold ph-arrow-u-up-left text-xl"></i> <span data-i18n="btnUndo" class="hidden md:inline">回上一步</span>
+        </button>
         <button id="btn-fullscreen" onclick="toggleFullscreen()" class="bg-white/80 backdrop-blur-sm text-gray-600 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm border border-white/50 hover:bg-white font-bold flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0">
           <i id="icon-fullscreen" class="ph-bold ph-corners-out text-xl"></i>
           <span id="text-fullscreen" data-i18n="btnFull" class="hidden md:inline">全螢幕</span>
@@ -413,11 +416,17 @@
         <div class="relative z-10">
           <i id="modal-icon" class="ph-fill ph-trophy text-[6rem] text-orange-500 mx-auto mb-6 block drop-shadow-lg"></i>
           <h2 id="winner-text" class="text-4xl sm:text-5xl font-black text-gray-800 mb-4 tracking-wider">獲勝！</h2>
-          <p id="gameover-desc" class="text-xl text-gray-600 mb-10 font-bold">太棒了！大家都學會好多新詞了！</p>
+          <p id="gameover-desc" class="text-xl text-gray-600 mb-8 font-bold">太棒了！大家都學會好多新詞了！</p>
+          
           <button onclick="initGame()" class="btn-3d w-full bg-orange-500 border-orange-700 hover:bg-orange-400 text-white font-black text-2xl py-4 rounded-2xl shadow-lg flex justify-center items-center gap-2">
-            <i class="ph-bold ph-arrow-counter-clockwise text-3xl"></i> <span data-i18n="btnPlayAgain">再玩一次</span>
+            <i class="ph-bold ph-arrows-clockwise text-3xl"></i> <span data-i18n="btnPlayAgain">再玩一次</span>
           </button>
-          <button onclick="returnToSetup()" class="mt-4 text-gray-400 font-bold hover:text-gray-600 transition-colors">
+          
+          <button onclick="undoMove()" class="mt-3 btn-3d w-full bg-gray-500 border-gray-700 hover:bg-gray-400 text-white font-black text-xl py-3 rounded-2xl shadow-md flex justify-center items-center gap-2">
+            <i class="ph-bold ph-arrow-u-up-left text-2xl"></i> <span data-i18n="btnUndo">回上一步</span>
+          </button>
+          
+          <button onclick="returnToSetup()" class="mt-5 text-gray-400 font-bold hover:text-gray-600 transition-colors">
             <span data-i18n="btnHome">返回首頁</span>
           </button>
         </div>
@@ -445,7 +454,7 @@
         autoSaved: "已自動儲存", wordCount: "目前字數：", wordUnit: "字",
         btnRestore: "恢復預設", btnCopy: "複製學生連結", btnDone: "完成返回", btnStart: "開始遊戲！",
         btnSetup: "重新設定", btnUnmute: "語音開啟", btnMute: "已靜音", btnFull: "全螢幕", btnExitFull: "退出",
-        btnPrint: "列印紙本", btnRestart: "重新開局",
+        btnPrint: "列印紙本", btnRestart: "重新開局", btnUndo: "回上一步",
         p1Label: "Player 1", p1Default: "黑棋", p2Label: "Player 2", p2Default: "白棋",
         time: "TIME", footer: "Powered by Gemini | Sophia老師的AI練習本",
         hintPvE: "點擊格子放上棋子。電腦會自動讀出詞彙，請跟著大聲念喔！", hintPvP: "點擊格子放上棋子。請大聲念出格子裡的字再下棋喔！",
@@ -472,7 +481,7 @@
         autoSaved: "已自动保存", wordCount: "目前字数：", wordUnit: "字",
         btnRestore: "恢复默认", btnCopy: "复制学生链接", btnDone: "完成返回", btnStart: "开始游戏！",
         btnSetup: "重新设置", btnUnmute: "语音开启", btnMute: "已静音", btnFull: "全屏", btnExitFull: "退出",
-        btnPrint: "打印纸本", btnRestart: "重新开局",
+        btnPrint: "打印纸本", btnRestart: "重新开局", btnUndo: "撤销",
         p1Label: "Player 1", p1Default: "黑棋", p2Label: "Player 2", p2Default: "白棋",
         time: "TIME", footer: "Powered by Gemini | Sophia老师的AI练习本",
         hintPvE: "点击格子放上棋子。电脑会自动读出词汇，请跟着大声念哦！", hintPvP: "点击格子放上棋子。请大声念出格子里的字再下棋哦！",
@@ -481,7 +490,7 @@
         btnPlayAgain: "再玩一次", btnHome: "返回首页",
         printHeader: "汉字五子棋 挑战单", printClass: "班级：_______________", printName: "姓名：_______________", printDate: "日期：_______________",
         printRuleTitle: "🎯 游戏规则：", printRule1: "1. 两人轮流在圆圈内画「Ｏ」或「Ｘ」，或是涂上不同颜色。",
-        printRule2: "2. 下棋做记号前，", printRule2u: "必须先大声念出格子里的生词", printRule2_2: "，念对才可以下！",
+        printRule2: "2. 下棋做记号前，", printRule2u: "必须大声念出格子里的生词", printRule2_2: "，念对才可以下！",
         printRule3: "3. 谁先将五个记号连成一条线（横向、直向、斜向皆可），谁就获胜！",
         toastCopied: "已复制学生专属链接！快传给学生吧！", toastLoadedShare: "已成功载入分享的题库！", toastLoadedStudent: "已载入老师指定的题库！祝你闯关顺利！",
         toastRestore: "确定要清除目前的题库，并恢复为默认生词吗？", toastCopyFail: "复制失败，请手动选取网址列分享", noWords: "无生词",
@@ -499,7 +508,7 @@
         autoSaved: "Auto-saved", wordCount: "Word count: ", wordUnit: "words",
         btnRestore: "Default", btnCopy: "Copy Link", btnDone: "Done", btnStart: "Start Game!",
         btnSetup: "Settings", btnUnmute: "Voice On", btnMute: "Muted", btnFull: "Fullscreen", btnExitFull: "Exit",
-        btnPrint: "Print", btnRestart: "Restart",
+        btnPrint: "Print", btnRestart: "Restart", btnUndo: "Undo",
         p1Label: "Player 1", p1Default: "Black", p2Label: "Player 2", p2Default: "White",
         time: "TIME", footer: "Powered by Gemini | Sophia's AI Workbook",
         hintPvE: "Click a cell to play. Repeat out loud after the computer reads the word!", hintPvP: "Click a cell to play. Read the word out loud before you play!",
@@ -583,6 +592,10 @@
     let winningLine = [];
     let isComputerThinking = false;
     
+    // 新增：用於記錄每一步的歷史狀態
+    let moveHistory = [];
+    let gameoverTimeout = null;
+
     let scores = { 1: 0, 2: 0 };
     let timeElapsed = 0;
     let timerInterval = null;
@@ -768,7 +781,6 @@
       }
     }
 
-    // 新增：設定棋盤大小
     function setBoardSize(size) {
       boardSize = size;
       [8, 10, 12].forEach(s => {
@@ -784,7 +796,7 @@
     // ==================== 遊戲核心邏輯 ====================
     function initGame() {
       let words = getWordList();
-      if (words.length === 0) words = ['中文', '华语', 'Happy']; // 簡單防呆
+      if (words.length === 0) words = ['中文', '华语', 'Happy']; 
 
       board = [];
       for (let i = 0; i < boardSize * boardSize; i++) {
@@ -808,6 +820,10 @@
       winningLine = [];
       isComputerThinking = false;
       gameState = 'playing';
+      
+      // 清空歷史紀錄與遊戲結束倒數
+      moveHistory = [];
+      if (gameoverTimeout) clearTimeout(gameoverTimeout);
       
       timeElapsed = 0;
       updateTimerDisplay();
@@ -859,6 +875,15 @@
     }
 
     function placePiece(index, player) {
+      // 深度拷貝當前棋盤狀態，並記錄到歷史中
+      moveHistory.push({
+        board: board.map(cell => ({ ...cell })),
+        currentPlayer: currentPlayer,
+        winningLine: [...winningLine],
+        gameState: gameState,
+        scores: { ...scores }
+      });
+
       board[index].owner = player;
       
       const winLine = checkWin(player);
@@ -879,6 +904,44 @@
       if (gameMode === 'pve' && currentPlayer === 2) {
         isComputerThinking = true;
         setTimeout(() => aiMove(), 800); 
+      }
+    }
+
+    // ==================== 新增：回上一步功能 ====================
+    function undoMove() {
+      if (moveHistory.length === 0 || isComputerThinking) return;
+
+      // 若正處於遊戲結束的延遲階段，取消彈出視窗
+      if (gameoverTimeout) clearTimeout(gameoverTimeout);
+
+      let prevState = null;
+
+      if (gameMode === 'pve') {
+        // 在單人模式中，退回直到輪回玩家的狀態 (可同時退回電腦與玩家的一步)
+        while (moveHistory.length > 0) {
+          prevState = moveHistory.pop();
+          if (prevState.currentPlayer === 1) {
+            break;
+          }
+        }
+      } else {
+        // 雙人模式只要退回上一個操作狀態
+        prevState = moveHistory.pop();
+      }
+
+      if (prevState) {
+        board = prevState.board;
+        currentPlayer = prevState.currentPlayer;
+        winningLine = prevState.winningLine;
+        gameState = prevState.gameState;
+        scores = prevState.scores;
+
+        // 隱藏遊戲結束的視窗
+        document.getElementById('gameover-modal').classList.add('hidden');
+        
+        updateScoresUI();
+        renderBoard();
+        updatePlayerTurnUI();
       }
     }
 
@@ -908,7 +971,7 @@
         descText.innerText = t('winDesc');
       }
       
-      setTimeout(() => {
+      gameoverTimeout = setTimeout(() => {
         modal.classList.remove('hidden');
       }, 500);
     }
@@ -917,12 +980,9 @@
     function renderBoard() {
       const container = document.getElementById('board-container');
       
-      // 動態更新棋盤欄數與間距
       container.style.gridTemplateColumns = `repeat(${boardSize}, minmax(0, 1fr))`;
-      
       container.innerHTML = '';
 
-      // 計算自適應字體大小 (例如 10x10 是 2.3cqi, 8x8 是 2.8cqi)
       const dynamicFontSize = (23 / boardSize).toFixed(2);
 
       board.forEach((cell, index) => {
@@ -1059,7 +1119,6 @@
       if (bestMoves.length > 0) {
         bestMove = bestMoves[Math.floor(Math.random() * bestMoves.length)];
       } else {
-        // 電腦開局動態尋找中心點
         const half = Math.floor(boardSize / 2);
         const centerMoves = [
           (half - 1) * boardSize + (half - 1),
