@@ -11,14 +11,20 @@
   <!-- 引入 Phosphor Icons 圖示庫 -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   
-  <!-- 引入 Google Fonts (圓潤可愛的字體) -->
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+  <!-- 引入 Google Fonts (圓潤可愛的字體，支援繁簡雙語系) -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
 
   <style>
     body {
-      font-family: 'Nunito', 'Noto Sans TC', sans-serif;
+      /* 預設繁體中文與英文的字型順序 */
+      font-family: 'Nunito', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
       background: radial-gradient(circle at top right, #fff7ed, #ffedd5, #fed7aa);
       background-attachment: fixed;
+    }
+
+    /* 當切換為簡體中文時，自動套用簡體專屬的標準字型與通用字型 */
+    html[lang="zh-CN"] body {
+      font-family: 'Nunito', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', '微软雅黑', sans-serif;
     }
 
     /* 動畫效果 */
@@ -73,24 +79,20 @@
       @page { size: A4 portrait; margin: 1cm; }
       body { background: white !important; color: black !important; }
       
-      /* 隱藏網頁操作的 UI */
       #setup-screen, #gameover-modal, footer, .no-print { 
         display: none !important; 
       }
       
-      /* 強制顯示遊戲畫面，並移除邊距 */
       #game-screen { 
         display: block !important; 
         padding: 0 !important; 
       }
 
-      /* 顯示紙本專用標頭 */
       .print-header { 
         display: block !important; 
         margin-bottom: 20px !important;
       }
 
-      /* 將棋盤轉化為平面的紙本黑白框線格式 */
       #board-wrapper {
         width: 17cm !important;
         height: 17cm !important;
@@ -98,13 +100,11 @@
         margin: 0 auto !important;
       }
       
-      /* 隱藏 3D 陰影與木頭特效層 */
       #board-wrapper > div:first-child,
       #board-wrapper > div:nth-child(2) > div:first-child {
         display: none !important;
       }
 
-      /* 棋盤底色變白 */
       #board-wrapper > div:nth-child(2) {
         background: white !important;
         border: 3px solid black !important;
@@ -115,7 +115,6 @@
 
       #board-container { gap: 4px !important; }
 
-      /* 格子變成純白黑框 */
       #board-container > div {
         background: white !important;
         border: 2px solid #333 !important;
@@ -124,7 +123,6 @@
         box-shadow: none !important;
       }
 
-      /* 字體變成純黑，無視原本是黑棋還是白棋 */
       #board-container span {
         color: black !important;
         text-shadow: none !important;
@@ -133,7 +131,6 @@
         opacity: 1 !important;
       }
 
-      /* 隱藏提示的喇叭 Icon */
       #board-container i { display: none !important; }
     }
   </style>
@@ -143,119 +140,149 @@
   <!-- 系統提示訊息 (Toast) -->
   <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 -translate-y-10 bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-50 font-bold flex items-center gap-2">
     <i class="ph-fill ph-check-circle text-green-400 text-2xl"></i>
-    <span id="toast-msg">已複製連結！快傳給學生吧！</span>
+    <span id="toast-msg">已複製專屬連結！</span>
   </div>
 
   <!-- ==================== 設定畫面 (Setup Screen) ==================== -->
   <div id="setup-screen" class="flex-1 flex flex-col items-center justify-between p-4 sm:p-6 w-full">
     <div class="flex-1 flex items-center justify-center w-full my-4">
-      <div class="glass-card rounded-[2rem] max-w-2xl w-full p-6 sm:p-10 transition-all">
+      <div class="glass-card rounded-[2rem] max-w-2xl w-full p-6 sm:p-10 transition-all relative">
         
+        <!-- 多語系選擇 (左上角) -->
+        <div class="absolute top-4 left-4 sm:top-6 sm:left-6 z-20">
+          <select id="lang-select" onchange="changeLang(this.value)" class="bg-white border-2 border-gray-200 text-gray-600 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl font-bold outline-none cursor-pointer hover:bg-gray-50 transition-colors shadow-sm focus:border-orange-300 text-sm sm:text-base">
+            <option value="zh-TW">繁體中文</option>
+            <option value="zh-CN">简体中文</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+
+        <!-- 教師專區按鈕 (右上角) -->
+        <div class="absolute top-4 right-4 sm:top-6 sm:right-6 z-20" id="teacher-btn-container">
+          <button onclick="toggleEditVocab(true)" class="bg-orange-100 hover:bg-orange-200 text-orange-700 border-2 border-orange-200 px-3 py-1.5 sm:py-2 rounded-xl shadow-sm font-black flex items-center gap-2 transition-all active:scale-95">
+            <i class="ph-bold ph-gear-six text-xl"></i> <span data-i18n="teacherZone" class="hidden sm:inline">教師專區</span>
+          </button>
+        </div>
+
         <!-- 主設定畫面 -->
         <div id="main-setup-view" class="fade-in">
           <!-- 標題區域 -->
-          <div class="text-center mb-8">
+          <div class="text-center mb-8 pt-10 sm:pt-0">
             <div class="inline-flex items-center justify-center bg-orange-100 w-20 h-20 rounded-3xl mb-4 shadow-inner rotate-3">
               <i class="ph-fill ph-check-square-offset text-5xl text-orange-500"></i>
             </div>
-            <h1 class="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-500 mb-2 tracking-wider">
+            <h1 data-i18n="appTitle" class="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-500 mb-2 tracking-wider">
               漢字五子棋
             </h1>
-            <p class="text-gray-500 text-lg font-bold">讓孩子在遊戲中自然開口說華語！</p>
+            <p data-i18n="appSubtitle" class="text-gray-500 text-lg font-bold">讓孩子在遊戲中自然開口說華語！</p>
           </div>
 
           <div class="space-y-8">
-            <!-- 遊戲模式選擇 -->
+            <!-- 1. 遊戲模式選擇 -->
             <div class="bg-white/50 p-4 rounded-3xl shadow-sm border border-gray-100">
               <label class="flex items-center gap-2 text-xl font-black text-gray-700 mb-4 ml-2">
-                <i class="ph-fill ph-game-controller text-orange-400"></i> 1. 選擇遊戲模式
+                <i class="ph-fill ph-game-controller text-orange-400"></i> <span data-i18n="step1">1. 選擇遊戲模式</span>
               </label>
               <div class="flex flex-col sm:flex-row gap-4">
                 <button id="btn-mode-pve" onclick="setGameMode('pve')" class="flex-1 flex flex-col items-center p-5 rounded-2xl border-2 transition-all border-orange-400 bg-orange-50 ring-4 ring-orange-400/20 shadow-md transform scale-[1.02]">
                   <div class="bg-white p-3 rounded-full shadow-sm mb-3">
                     <i class="ph-fill ph-robot text-4xl text-orange-500"></i>
                   </div>
-                  <span class="font-black text-xl text-orange-700">挑戰電腦</span>
-                  <span class="text-sm text-orange-500/80 mt-1 font-bold">單人練習 • 語音帶讀</span>
+                  <span data-i18n="modePvE" class="font-black text-xl text-orange-700">挑戰電腦</span>
+                  <span data-i18n="modePvEDesc" class="text-sm text-orange-500/80 mt-1 font-bold">單人練習 • 語音帶讀</span>
                 </button>
                 <button id="btn-mode-pvp" onclick="setGameMode('pvp')" class="flex-1 flex flex-col items-center p-5 rounded-2xl border-2 transition-all border-gray-200 bg-white hover:bg-gray-50 text-gray-400 hover:text-gray-500">
                   <div class="bg-gray-50 p-3 rounded-full mb-3">
                     <i class="ph-fill ph-users-three text-4xl current-color"></i>
                   </div>
-                  <span class="font-black text-xl">雙人對戰</span>
-                  <span class="text-sm mt-1 font-bold">課堂活動 • 兩人同樂</span>
+                  <span data-i18n="modePvP" class="font-black text-xl">雙人對戰</span>
+                  <span data-i18n="modePvPDesc" class="text-sm mt-1 font-bold">課堂活動 • 兩人同樂</span>
                 </button>
               </div>
             </div>
 
-            <!-- 題庫區塊 -->
+            <!-- 2. 玩家設定區塊 -->
             <div class="bg-white/50 p-4 rounded-3xl shadow-sm border border-gray-100">
               <label class="flex items-center gap-2 text-xl font-black text-gray-700 mb-4 ml-2">
-                <i class="ph-fill ph-books text-orange-400"></i> 2. 遊戲題庫
+                <i class="ph-fill ph-identification-card text-orange-400"></i> <span data-i18n="step2">2. 玩家設定 (選填)</span>
               </label>
-              <div class="bg-white p-4 sm:p-5 rounded-2xl border-2 border-orange-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all hover:border-orange-300 shadow-sm group">
-                <div class="overflow-hidden w-full">
-                  <div class="flex items-end gap-2 mb-1">
-                    <p class="text-gray-400 font-bold">已載入</p>
-                    <p class="text-orange-600 font-black text-3xl leading-none" id="vocab-count-display">0</p>
-                    <p class="text-gray-400 font-bold">個生詞</p>
+              <div class="flex flex-col sm:flex-row gap-4">
+                <div class="flex-1 flex items-center bg-white p-3 sm:p-4 rounded-2xl border-2 border-gray-200 focus-within:border-gray-800 transition-colors shadow-sm">
+                  <div class="bg-gradient-to-br from-gray-600 to-black text-white w-10 h-10 rounded-full flex items-center justify-center mr-3 shrink-0 shadow-md">
+                    <i class="ph-fill ph-user text-lg"></i>
                   </div>
-                  <p id="vocab-preview-display" class="text-sm text-gray-500 truncate font-medium bg-gray-50 px-3 py-1 rounded-lg inline-block max-w-full">...</p>
+                  <input type="text" id="p1-name-input" data-i18n-placeholder="p1Placeholder" placeholder="黑棋玩家姓名" class="w-full bg-transparent outline-none font-bold text-gray-700 text-lg placeholder-gray-300" maxlength="12">
                 </div>
-                
-                <div class="flex gap-2 w-full sm:w-auto shrink-0 mt-2 sm:mt-0">
-                  <button onclick="toggleEditVocab(true)" class="flex-1 sm:flex-none bg-orange-50 border-2 border-orange-200 text-orange-600 px-4 py-2.5 rounded-xl font-black hover:bg-orange-100 hover:border-orange-300 transition-colors flex items-center justify-center gap-2 active:scale-95">
-                    <i class="ph-bold ph-pencil-simple text-xl"></i> <span class="sm:hidden lg:inline">編輯</span>
-                  </button>
-                  <button onclick="copyShareLink()" class="flex-[2] sm:flex-none bg-blue-50 border-2 border-blue-200 text-blue-600 px-4 py-2.5 rounded-xl font-black hover:bg-blue-100 hover:border-blue-300 transition-colors flex items-center justify-center gap-2 active:scale-95">
-                    <i class="ph-bold ph-share-network text-xl"></i> 分享給學生
-                  </button>
+                <div class="flex-1 flex items-center bg-white p-3 sm:p-4 rounded-2xl border-2 border-gray-200 focus-within:border-gray-400 transition-colors shadow-sm">
+                  <div class="bg-gradient-to-br from-white to-gray-200 text-gray-500 border-2 border-gray-300 w-10 h-10 rounded-full flex items-center justify-center mr-3 shrink-0 shadow-sm">
+                    <i id="p2-name-icon-setup" class="ph-fill ph-robot text-lg"></i>
+                  </div>
+                  <input type="text" id="p2-name-input" data-i18n-placeholder="computer" placeholder="電腦" class="w-full bg-transparent outline-none font-bold text-gray-700 text-lg placeholder-gray-300" maxlength="12" disabled>
                 </div>
               </div>
             </div>
 
-            <button onclick="initGame()" class="btn-3d w-full bg-orange-500 border-orange-700 hover:bg-orange-400 text-white font-black text-2xl py-4 sm:py-5 rounded-2xl flex justify-center items-center gap-3 mt-4">
-              <i class="ph-fill ph-play-circle text-3xl"></i> 開始遊戲！
+            <!-- 3. 題庫展示區 -->
+            <div class="bg-white/50 p-4 rounded-3xl shadow-sm border border-gray-100">
+              <label class="flex items-center gap-2 text-xl font-black text-gray-700 mb-4 ml-2">
+                <i class="ph-fill ph-books text-orange-400"></i> <span id="step3-label" data-i18n="step3">3. 遊戲題庫</span>
+              </label>
+              <div class="bg-white p-4 sm:p-5 rounded-2xl border-2 border-orange-100 flex flex-col justify-center items-start shadow-sm">
+                <div class="flex items-end gap-2 mb-2">
+                  <p data-i18n="loaded" class="text-gray-400 font-bold">已載入</p>
+                  <p class="text-orange-600 font-black text-3xl leading-none" id="vocab-count-display">0</p>
+                  <p data-i18n="vocabUnit" class="text-gray-400 font-bold">個生詞</p>
+                </div>
+                <p id="vocab-preview-display" class="text-sm text-gray-500 truncate font-medium bg-gray-50 px-3 py-2 rounded-lg inline-block w-full border border-gray-100">...</p>
+              </div>
+            </div>
+
+            <button onclick="initGame()" class="btn-3d w-full bg-orange-500 border-orange-700 hover:bg-orange-400 text-white font-black text-2xl py-4 sm:py-5 rounded-2xl flex justify-center items-center gap-3 mt-4 shadow-lg shadow-orange-500/30">
+              <i class="ph-fill ph-play-circle text-3xl"></i> <span data-i18n="btnStart">開始遊戲！</span>
             </button>
           </div>
         </div>
 
-        <!-- 編輯題庫畫面 -->
+        <!-- 教師後台 -->
         <div id="edit-vocab-view" class="fade-in hidden">
-          <div class="text-center mb-6">
-            <div class="inline-flex items-center justify-center bg-green-100 w-16 h-16 rounded-2xl mb-2 shadow-inner">
-              <i class="ph-fill ph-pencil-line text-4xl text-green-500"></i>
+          <div class="text-center mb-6 pt-4">
+            <div class="inline-flex items-center justify-center bg-blue-100 w-16 h-16 rounded-2xl mb-2 shadow-inner">
+              <i class="ph-fill ph-chalkboard-teacher text-4xl text-blue-500"></i>
             </div>
-            <h2 class="text-3xl font-black text-gray-800 tracking-wider">編輯生詞庫</h2>
+            <h2 data-i18n="teacherZone" class="text-3xl font-black text-gray-800 tracking-wider">教師專區</h2>
+            <p data-i18n="teacherDesc" class="text-gray-500 font-bold mt-2">設定題庫並產生給學生的遊戲連結</p>
           </div>
           
           <div class="mb-3 flex flex-col sm:flex-row justify-between sm:items-end gap-2">
             <label class="text-lg font-bold text-gray-600">
-              請貼上或輸入生詞 <span class="text-sm font-normal text-gray-400">(以空格或逗號分隔)</span>
+              <span data-i18n="inputCustom">請貼上或輸入自訂生詞</span> <span data-i18n="inputHint" class="text-sm font-normal text-gray-400">(空格或逗號分隔)</span>
             </label>
             <div class="flex items-center gap-2">
-              <span id="auto-save-hint" class="text-gray-400 text-sm font-bold opacity-0 transition-opacity">已自動儲存</span>
-              <span class="text-green-700 font-black bg-green-100 px-4 py-1.5 rounded-full text-sm inline-block shadow-sm">
-                目前字數：<span id="edit-word-count" class="text-lg">0</span> 字
+              <span id="auto-save-hint" data-i18n="autoSaved" class="text-gray-400 text-sm font-bold opacity-0 transition-opacity">已自動儲存</span>
+              <span class="text-blue-700 font-black bg-blue-100 px-4 py-1.5 rounded-full text-sm inline-block shadow-sm">
+                <span data-i18n="wordCount">目前字數：</span><span id="edit-word-count" class="text-lg">0</span> <span data-i18n="wordUnit">字</span>
               </span>
             </div>
           </div>
           
-          <textarea id="vocab-input" oninput="updateVocabCount()" class="w-full h-64 p-5 border-4 border-gray-100 rounded-2xl focus:border-green-400 focus:outline-none focus:ring-4 focus:ring-green-100 resize-none text-lg text-gray-700 leading-relaxed font-medium bg-gray-50 focus:bg-white transition-colors"></textarea>
+          <textarea id="vocab-input" oninput="updateVocabCount()" class="w-full h-64 p-5 border-4 border-gray-100 rounded-2xl focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-100 resize-none text-lg text-gray-700 leading-relaxed font-medium bg-gray-50 focus:bg-white transition-colors"></textarea>
           
-          <div class="flex gap-3 mt-6">
-            <button onclick="restoreDefaultVocab()" class="btn-3d flex-1 bg-gray-200 border-gray-400 hover:bg-gray-300 text-gray-700 font-black text-lg sm:text-xl py-4 rounded-2xl flex justify-center items-center gap-2">
-              <i class="ph-bold ph-arrow-counter-clockwise text-2xl"></i> <span class="hidden sm:inline">恢復</span>預設
+          <div class="flex flex-col sm:flex-row gap-3 mt-6">
+            <button onclick="restoreDefaultVocab()" class="btn-3d flex-1 bg-gray-200 border-gray-400 hover:bg-gray-300 text-gray-700 font-black text-lg py-3 rounded-2xl flex justify-center items-center gap-2">
+              <i class="ph-bold ph-arrow-counter-clockwise text-2xl"></i> <span data-i18n="btnRestore">恢復預設</span>
             </button>
-            <button onclick="toggleEditVocab(false)" class="btn-3d flex-[2] bg-green-500 border-green-700 hover:bg-green-400 text-white font-black text-lg sm:text-xl py-4 rounded-2xl flex justify-center items-center gap-2">
-              <i class="ph-bold ph-check text-2xl"></i> 完成儲存
+            <button onclick="copyShareLink()" class="btn-3d flex-[2] bg-blue-500 border-blue-700 hover:bg-blue-400 text-white font-black text-lg py-3 rounded-2xl flex justify-center items-center gap-2 shadow-lg shadow-blue-500/30">
+              <i class="ph-bold ph-link text-2xl"></i> <span data-i18n="btnCopy">複製學生連結</span>
+            </button>
+            <button onclick="toggleEditVocab(false)" class="btn-3d flex-[2] bg-green-500 border-green-700 hover:bg-green-400 text-white font-black text-lg py-3 rounded-2xl flex justify-center items-center gap-2">
+              <i class="ph-bold ph-check text-2xl"></i> <span data-i18n="btnDone">完成返回</span>
             </button>
           </div>
         </div>
 
       </div>
     </div>
-    <footer class="no-print text-center text-orange-900/40 text-sm font-bold pt-4 w-full">
+    <footer data-i18n="footer" class="no-print text-center text-orange-900/40 text-sm font-bold pt-4 w-full">
       Powered by Gemini | Sophia老師的AI練習本
     </footer>
   </div>
@@ -263,82 +290,83 @@
   <!-- ==================== 遊戲畫面 (Game Screen) ==================== -->
   <div id="game-screen" class="hidden min-h-screen flex flex-col items-center py-4 sm:py-6 px-2 sm:px-4 w-full relative">
     
-    <!-- 列印專用的抬頭標籤 (平時隱藏，列印時才顯示) -->
+    <!-- 列印專用的抬頭標籤 -->
     <div class="hidden print-header w-full max-w-4xl mx-auto text-center mt-8">
-      <h1 class="text-4xl font-black mb-6 tracking-widest text-black border-4 border-black inline-block px-10 py-3 rounded-2xl shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+      <h1 data-i18n="printHeader" class="text-4xl font-black mb-6 tracking-widest text-black border-4 border-black inline-block px-10 py-3 rounded-2xl shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
         漢字五子棋 挑戰單
       </h1>
       <div class="flex justify-between text-xl font-bold border-b-4 border-black pb-3 px-4 mb-6">
-        <span>班級：_______________</span>
-        <span>姓名：_______________</span>
-        <span>日期：_______________</span>
+        <span data-i18n="printClass">班級：_______________</span>
+        <span data-i18n="printName">姓名：_______________</span>
+        <span data-i18n="printDate">日期：_______________</span>
       </div>
       <div class="text-left text-lg font-bold border-2 border-gray-400 p-4 rounded-xl bg-gray-50 mb-8 mx-2">
-        <p class="text-xl mb-2">🎯 遊戲規則：</p>
-        <p>1. 兩人輪流在圓圈內畫「Ｏ」或「Ｘ」，或是塗上不同顏色。</p>
-        <p>2. 下棋做記號前，<span class="underline">必須先大聲念出格子裡的生詞</span>，念對才可以下！</p>
-        <p>3. 誰先將五個記號連成一條線（橫向、直向、斜向皆可），誰就獲勝！</p>
+        <p data-i18n="printRuleTitle" class="text-xl mb-2">🎯 遊戲規則：</p>
+        <p data-i18n="printRule1">1. 兩人輪流在圓圈內畫「Ｏ」或「Ｘ」，或是塗上不同顏色。</p>
+        <p><span data-i18n="printRule2">2. 下棋做記號前，</span><span data-i18n="printRule2u" class="underline">必須先大聲念出格子裡的生詞</span><span data-i18n="printRule2_2">，念對才可以下！</span></p>
+        <p data-i18n="printRule3">3. 誰先將五個記號連成一條線（橫向、直向、斜向皆可），誰就獲勝！</p>
       </div>
     </div>
 
-    <!-- 頂部控制列 (no-print) -->
+    <!-- 頂部控制列 -->
     <div class="w-full max-w-5xl flex justify-between items-center mb-4 sm:mb-6 px-2 no-print">
       <div class="flex gap-2 sm:gap-3">
         <button onclick="returnToSetup()" class="bg-white/80 backdrop-blur-sm text-gray-600 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm border border-white/50 hover:bg-white font-bold flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0">
-          <i class="ph-bold ph-arrow-left text-xl"></i> <span class="hidden sm:inline">重新設定</span>
+          <i class="ph-bold ph-arrow-left text-xl"></i> <span data-i18n="btnSetup" class="hidden sm:inline">重新設定</span>
         </button>
         <button id="btn-mute" onclick="toggleMute()" class="bg-green-100/80 backdrop-blur-sm text-green-700 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm border border-white/50 hover:bg-green-100 font-bold flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0">
           <i id="icon-mute" class="ph-bold ph-speaker-high text-xl"></i>
-          <span id="text-mute" class="hidden md:inline">語音開啟</span>
+          <span id="text-mute" data-i18n="btnUnmute" class="hidden md:inline">語音開啟</span>
         </button>
       </div>
+      
+      <h1 data-i18n="appTitle" class="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600 tracking-widest text-center hidden lg:block drop-shadow-sm">漢字五子棋</h1>
       
       <div class="flex gap-2 sm:gap-3">
         <button id="btn-fullscreen" onclick="toggleFullscreen()" class="bg-white/80 backdrop-blur-sm text-gray-600 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm border border-white/50 hover:bg-white font-bold flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0">
           <i id="icon-fullscreen" class="ph-bold ph-corners-out text-xl"></i>
-          <span id="text-fullscreen" class="hidden md:inline">全螢幕</span>
+          <span id="text-fullscreen" data-i18n="btnFull" class="hidden md:inline">全螢幕</span>
         </button>
-        <!-- 新增的列印按鈕 -->
         <button onclick="window.print()" class="bg-blue-500 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-md border border-blue-400 hover:bg-blue-400 font-bold flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0">
-          <i class="ph-bold ph-printer text-xl"></i> <span class="hidden sm:inline">列印紙本</span>
+          <i class="ph-bold ph-printer text-xl"></i> <span data-i18n="btnPrint" class="hidden sm:inline">列印紙本</span>
         </button>
         <button onclick="initGame()" class="bg-orange-500 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-md border border-orange-400 hover:bg-orange-400 font-bold flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0">
-          <i class="ph-bold ph-arrows-clockwise text-xl"></i> <span class="hidden sm:inline">重新開局</span>
+          <i class="ph-bold ph-arrows-clockwise text-xl"></i> <span data-i18n="btnRestart" class="hidden sm:inline">重新開局</span>
         </button>
       </div>
     </div>
 
-    <!-- 狀態列 (no-print) -->
+    <!-- 狀態列 -->
     <div class="glass-card rounded-2xl p-2 sm:p-3 mb-4 sm:mb-6 w-full max-w-5xl flex justify-between items-stretch no-print">
-      <!-- 黑棋玩家狀態 -->
+      <!-- 黑棋 -->
       <div id="player1-indicator" class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 px-2 sm:px-6 py-2 sm:py-3 rounded-xl transition-all duration-300">
         <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-gray-600 to-black shadow-[0_4px_6px_rgba(0,0,0,0.5)] border border-gray-700 flex items-center justify-center">
           <i class="ph-fill ph-user text-gray-300 text-sm sm:text-base"></i>
         </div>
         <div class="text-center sm:text-left flex flex-col">
-          <span class="font-bold text-xs sm:text-sm text-inherit opacity-80 uppercase tracking-wider">Player 1</span>
-          <span class="font-black text-sm sm:text-xl text-inherit">黑棋</span>
+          <span data-i18n="p1Label" class="font-bold text-xs sm:text-sm text-inherit opacity-80 uppercase tracking-wider">Player 1</span>
+          <span id="p1-name" class="font-black text-sm sm:text-xl text-inherit">黑棋</span>
         </div>
         <span id="score-p1" class="text-3xl sm:text-5xl font-black text-inherit ml-0 sm:ml-auto drop-shadow-md">0</span>
       </div>
       
-      <!-- 中間計時器 -->
+      <!-- 計時器 -->
       <div class="flex-shrink-0 flex flex-col items-center justify-center px-4 sm:px-8 border-x-2 border-gray-200/50">
         <div class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-bold mb-1 sm:mb-2 shadow-inner flex items-center gap-1">
-          <i class="ph-fill ph-clock-countdown"></i> TIME
+          <i class="ph-fill ph-clock-countdown"></i> <span data-i18n="time">TIME</span>
         </div>
         <div id="timer-display" class="text-2xl sm:text-4xl font-black text-gray-800 font-mono tracking-wider drop-shadow-sm">
           00:00
         </div>
       </div>
       
-      <!-- 白棋狀態 -->
+      <!-- 白棋 -->
       <div id="player2-indicator" class="flex-1 flex flex-col sm:flex-row-reverse items-center justify-center gap-2 sm:gap-4 px-2 sm:px-6 py-2 sm:py-3 rounded-xl transition-all duration-300">
         <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-white to-gray-200 shadow-[0_4px_6px_rgba(0,0,0,0.3)] border border-gray-300 flex items-center justify-center">
           <i id="p2-icon" class="ph-fill ph-robot text-gray-500 text-sm sm:text-base"></i>
         </div>
         <div class="text-center sm:text-right flex flex-col">
-          <span class="font-bold text-xs sm:text-sm text-inherit opacity-80 uppercase tracking-wider">Player 2</span>
+          <span data-i18n="p2Label" class="font-bold text-xs sm:text-sm text-inherit opacity-80 uppercase tracking-wider">Player 2</span>
           <span id="p2-name" class="font-black text-sm sm:text-xl text-inherit">白棋</span>
         </div>
         <span id="score-p2" class="text-3xl sm:text-5xl font-black text-inherit mr-0 sm:mr-auto drop-shadow-md">0</span>
@@ -350,22 +378,20 @@
       <div class="absolute inset-0 bg-[#8b5a2b] rounded-[2rem] sm:rounded-[2.5rem] transform translate-y-3 sm:translate-y-4 shadow-[0_20px_40px_rgba(139,69,19,0.5)]"></div>
       <div class="relative bg-gradient-to-br from-[#eecda3] to-[#ef629f] p-2 sm:p-3.5 rounded-[2rem] sm:rounded-[2.5rem] border-4 sm:border-[6px] border-[#d29b59] shadow-[inset_0_0_30px_rgba(139,69,19,0.2)]">
         <div class="absolute inset-0 bg-[#DEB887]/90 rounded-[1.8rem] sm:rounded-[2.2rem]"></div>
-        
         <div id="board-container" class="relative grid gap-1 sm:gap-1.5 z-10" style="grid-template-columns: repeat(10, minmax(0, 1fr));">
-          <!-- 格子由 JS 動態生成 -->
         </div>
       </div>
     </div>
 
-    <!-- 底部提示 (no-print) -->
+    <!-- 底部提示 -->
     <div class="mt-8 mb-4 bg-white/60 backdrop-blur-sm px-6 py-3 rounded-full shadow-sm border border-white no-print">
-      <p id="game-hint" class="text-gray-600 font-bold text-center flex items-center gap-2">
+      <p id="game-hint-container" class="text-gray-600 font-bold text-center flex items-center gap-2">
         <i class="ph-fill ph-lightbulb text-yellow-500 text-xl"></i>
-        <span>電腦會自動讀出詞彙，請跟著大聲念喔！</span>
+        <span id="game-hint">點擊格子放上棋子。電腦會自動讀出詞彙，請跟著大聲念喔！</span>
       </p>
     </div>
     
-    <footer class="no-print text-center text-orange-900/40 text-sm font-bold mt-auto w-full pb-2">
+    <footer data-i18n="footer" class="no-print text-center text-orange-900/40 text-sm font-bold mt-auto w-full pb-2">
       Powered by Gemini | Sophia老師的AI練習本
     </footer>
 
@@ -377,13 +403,13 @@
         
         <div class="relative z-10">
           <i id="modal-icon" class="ph-fill ph-trophy text-[6rem] text-orange-500 mx-auto mb-6 block drop-shadow-lg"></i>
-          <h2 id="winner-text" class="text-4xl sm:text-5xl font-black text-gray-800 mb-4 tracking-wider">黑棋獲勝！</h2>
+          <h2 id="winner-text" class="text-4xl sm:text-5xl font-black text-gray-800 mb-4 tracking-wider">獲勝！</h2>
           <p id="gameover-desc" class="text-xl text-gray-600 mb-10 font-bold">太棒了！大家都學會好多新詞了！</p>
           <button onclick="initGame()" class="btn-3d w-full bg-orange-500 border-orange-700 hover:bg-orange-400 text-white font-black text-2xl py-4 rounded-2xl shadow-lg flex justify-center items-center gap-2">
-            <i class="ph-bold ph-arrow-counter-clockwise text-3xl"></i> 再玩一次
+            <i class="ph-bold ph-arrow-counter-clockwise text-3xl"></i> <span data-i18n="btnPlayAgain">再玩一次</span>
           </button>
           <button onclick="returnToSetup()" class="mt-4 text-gray-400 font-bold hover:text-gray-600 transition-colors">
-            返回設定畫面
+            <span data-i18n="btnHome">返回首頁</span>
           </button>
         </div>
       </div>
@@ -396,8 +422,143 @@
       e.preventDefault();
     });
 
-    // ==================== 核心變數與常數 ====================
-    const DEFAULT_VOCAB = "動物園, 老虎, 大象, 玩, 看到, 網路, 電話, 寫信, 說話, 影像, 外公, 外婆, 臺北, 臺南, 旅行, 退休, 舅舅, 紐約, 法國, 一次, 超級市場, 巧克力, 冰淇淋, 牛肉, 青菜, 糖果, 漢堡, 薯條, 週末, 晚餐, 蛋炒飯, 玉米湯, 舒服, 秋天, 春天, 新年, 恭喜, 紅包, 壓歲錢, 燈籠";
+    // ==================== 多語系字典 (i18n) ====================
+    const i18n = {
+      'zh-TW': {
+        appTitle: "漢字五子棋", appSubtitle: "讓孩子在遊戲中自然開口說華語！",
+        step1: "1. 選擇遊戲模式", step2: "2. 玩家設定 (選填)", step3: "3. 遊戲題庫", step3student: "3. 本次挑戰範圍",
+        modePvE: "挑戰電腦", modePvEDesc: "單人練習 • 語音帶讀", modePvP: "雙人對戰", modePvPDesc: "課堂活動 • 兩人同樂",
+        p1Placeholder: "黑棋玩家姓名", p2Placeholder: "白棋玩家姓名", computer: "電腦",
+        loaded: "已載入", vocabUnit: "個生詞",
+        teacherZone: "教師專區", teacherDesc: "設定題庫並產生給學生的遊戲連結",
+        inputCustom: "請貼上或輸入自訂生詞", inputHint: "(空格或逗號分隔)",
+        autoSaved: "已自動儲存", wordCount: "目前字數：", wordUnit: "字",
+        btnRestore: "恢復預設", btnCopy: "複製學生連結", btnDone: "完成返回", btnStart: "開始遊戲！",
+        btnSetup: "重新設定", btnUnmute: "語音開啟", btnMute: "已靜音", btnFull: "全螢幕", btnExitFull: "退出",
+        btnPrint: "列印紙本", btnRestart: "重新開局",
+        p1Label: "Player 1", p1Default: "黑棋", p2Label: "Player 2", p2Default: "白棋",
+        time: "TIME", footer: "Powered by Gemini | Sophia老師的AI練習本",
+        hintPvE: "點擊格子放上棋子。電腦會自動讀出詞彙，請跟著大聲念喔！", hintPvP: "點擊格子放上棋子。請大聲念出格子裡的字再下棋喔！",
+        winText: " 獲勝！", winDesc: "太棒了！大家都學會好多新詞了！", drawText: "平手！",
+        drawDesc1: "雙方都沒有機會連線了，提前結束平手！", drawDesc2: "棋盤下滿了，雙方不分軒輊！",
+        btnPlayAgain: "再玩一次", btnHome: "返回首頁",
+        printHeader: "漢字五子棋 挑戰單", printClass: "班級：_______________", printName: "姓名：_______________", printDate: "日期：_______________",
+        printRuleTitle: "🎯 遊戲規則：", printRule1: "1. 兩人輪流在圓圈內畫「Ｏ」或「Ｘ」，或是塗上不同顏色。",
+        printRule2: "2. 下棋做記號前，", printRule2u: "必須先大聲念出格子裡的生詞", printRule2_2: "，念對才可以下！",
+        printRule3: "3. 誰先將五個記號連成一條線（橫向、直向、斜向皆可），誰就獲勝！",
+        toastCopied: "已複製學生專屬連結！快傳給學生吧！", toastLoadedShare: "已成功載入分享的題庫！", toastLoadedStudent: "已載入老師指定的題庫！祝你闖關順利！",
+        toastRestore: "確定要清除目前的題庫，並恢復為預設生詞嗎？", toastCopyFail: "複製失敗，請手動選取網址列分享", noWords: "無生詞"
+      },
+      'zh-CN': {
+        appTitle: "汉字五子棋", appSubtitle: "让孩子在游戏中自然开口说华语！",
+        step1: "1. 选择游戏模式", step2: "2. 玩家设置 (选填)", step3: "3. 游戏题库", step3student: "3. 本次挑战范围",
+        modePvE: "挑战电脑", modePvEDesc: "单人练习 • 语音带读", modePvP: "双人对战", modePvPDesc: "课堂活动 • 两人同乐",
+        p1Placeholder: "黑棋玩家姓名", p2Placeholder: "白棋玩家姓名", computer: "电脑",
+        loaded: "已载入", vocabUnit: "个生词",
+        teacherZone: "教师专区", teacherDesc: "设置题库并生成给学生的游戏链接",
+        inputCustom: "请贴上或输入自定义生词", inputHint: "(空格或逗号分隔)",
+        autoSaved: "已自动保存", wordCount: "目前字数：", wordUnit: "字",
+        btnRestore: "恢复默认", btnCopy: "复制学生链接", btnDone: "完成返回", btnStart: "开始游戏！",
+        btnSetup: "重新设置", btnUnmute: "语音开启", btnMute: "已静音", btnFull: "全屏", btnExitFull: "退出",
+        btnPrint: "打印纸本", btnRestart: "重新开局",
+        p1Label: "Player 1", p1Default: "黑棋", p2Label: "Player 2", p2Default: "白棋",
+        time: "TIME", footer: "Powered by Gemini | Sophia老师的AI练习本",
+        hintPvE: "点击格子放上棋子。电脑会自动读出词汇，请跟着大声念哦！", hintPvP: "点击格子放上棋子。请大声念出格子里的字再下棋哦！",
+        winText: " 获胜！", winDesc: "太棒了！大家都学会好多新词了！", drawText: "平手！",
+        drawDesc1: "双方都没有机会连线了，提前结束平手！", drawDesc2: "棋盘下满了，双方不分轩轾！",
+        btnPlayAgain: "再玩一次", btnHome: "返回首页",
+        printHeader: "汉字五子棋 挑战单", printClass: "班级：_______________", printName: "姓名：_______________", printDate: "日期：_______________",
+        printRuleTitle: "🎯 游戏规则：", printRule1: "1. 两人轮流在圆圈内画「Ｏ」或「Ｘ」，或是涂上不同颜色。",
+        printRule2: "2. 下棋做记号前，", printRule2u: "必须先大声念出格子里的生词", printRule2_2: "，念对才可以下！",
+        printRule3: "3. 谁先将五个记号连成一条线（横向、直向、斜向皆可），谁就获胜！",
+        toastCopied: "已复制学生专属链接！快传给学生吧！", toastLoadedShare: "已成功载入分享的题库！", toastLoadedStudent: "已载入老师指定的题库！祝你闯关顺利！",
+        toastRestore: "确定要清除目前的题库，并恢复为默认生词吗？", toastCopyFail: "复制失败，请手动选取网址列分享", noWords: "无生词"
+      },
+      'en': {
+        appTitle: "Chinese Gomoku", appSubtitle: "Learn Chinese naturally through gameplay!",
+        step1: "1. Select Game Mode", step2: "2. Player Names (Optional)", step3: "3. Vocabulary List", step3student: "3. Challenge Words",
+        modePvE: "Vs Computer", modePvEDesc: "Solo Practice • Vocab Audio", modePvP: "2 Players", modePvPDesc: "Class Activity • Play Together",
+        p1Placeholder: "Player 1 (Black)", p2Placeholder: "Player 2 (White)", computer: "Computer",
+        loaded: "Loaded", vocabUnit: "words",
+        teacherZone: "Teacher Zone", teacherDesc: "Set vocab and generate student links",
+        inputCustom: "Paste or type custom vocabulary", inputHint: "(Separated by spaces or commas)",
+        autoSaved: "Auto-saved", wordCount: "Word count: ", wordUnit: "words",
+        btnRestore: "Default", btnCopy: "Copy Link", btnDone: "Done", btnStart: "Start Game!",
+        btnSetup: "Settings", btnUnmute: "Voice On", btnMute: "Muted", btnFull: "Fullscreen", btnExitFull: "Exit",
+        btnPrint: "Print", btnRestart: "Restart",
+        p1Label: "Player 1", p1Default: "Black", p2Label: "Player 2", p2Default: "White",
+        time: "TIME", footer: "Powered by Gemini | Sophia's AI Workbook",
+        hintPvE: "Click a cell to play. Repeat out loud after the computer reads the word!", hintPvP: "Click a cell to play. Read the word out loud before you play!",
+        winText: " Wins!", winDesc: "Awesome! You learned so many new words!", drawText: "Draw!",
+        drawDesc1: "No more winning paths. Early draw!", drawDesc2: "The board is full. It's a tie!",
+        btnPlayAgain: "Play Again", btnHome: "Home",
+        printHeader: "Chinese Gomoku Challenge", printClass: "Class: _______________", printName: "Name: _______________", printDate: "Date: _______________",
+        printRuleTitle: "🎯 Game Rules:", printRule1: "1. Take turns marking an 'O' or 'X' in the circles.",
+        printRule2: "2. Before marking, ", printRule2u: "you must read the word out loud", printRule2_2: ". You can only mark it if you read it correctly!",
+        printRule3: "3. The first player to connect 5 marks in a row wins!",
+        toastCopied: "Link copied! Share it with your students!", toastLoadedShare: "Shared vocabulary loaded successfully!", toastLoadedStudent: "Teacher's vocabulary loaded! Good luck!",
+        toastRestore: "Clear current words and restore defaults?", toastCopyFail: "Copy failed, please copy the URL manually.", noWords: "No words"
+      }
+    };
+    
+    // 預設詞庫依據語系自動對應
+    const DEFAULT_VOCABS = {
+      'zh-TW': "動物園, 老虎, 大象, 玩, 看到, 網路, 電話, 寫信, 說話, 影像, 外公, 外婆, 臺北, 臺南, 旅行, 退休, 舅舅, 紐約, 法國, 一次, 超級市場, 巧克力, 冰淇淋, 牛肉, 青菜, 糖果, 漢堡, 薯條, 週末, 晚餐, 蛋炒飯, 玉米湯, 舒服, 秋天, 春天, 新年, 恭喜, 紅包, 壓歲錢, 燈籠",
+      'zh-CN': "动物园, 老虎, 大象, 玩, 看到, 网络, 电话, 写信, 说话, 影像, 外公, 外婆, 台北, 台南, 旅行, 退休, 舅舅, 纽约, 法国, 一次, 超级市场, 巧克力, 冰淇淋, 牛肉, 青菜, 糖果, 汉堡, 薯条, 周末, 晚餐, 蛋炒饭, 玉米汤, 舒服, 秋天, 春天, 新年, 恭喜, 红包, 压岁钱, 灯笼",
+      'en': "動物園, 老虎, 大象, 玩, 看到, 網路, 電話, 寫信, 說話, 影像, 外公, 外婆, 臺北, 臺南, 旅行, 退休, 舅舅, 紐約, 法國, 一次, 超級市場, 巧克力, 冰淇淋, 牛肉, 青菜, 糖果, 漢堡, 薯條, 週末, 晚餐, 蛋炒飯, 玉米湯, 舒服, 秋天, 春天, 新年, 恭喜, 紅包, 壓歲錢, 燈籠"
+    };
+
+    let currentLang = 'zh-TW';
+
+    function t(key) {
+      return i18n[currentLang][key] || key;
+    }
+
+    function changeLang(lang) {
+      currentLang = lang;
+      localStorage.setItem('gomoku_lang', lang);
+      applyTranslations();
+    }
+
+    function applyTranslations() {
+      // 動態更新網頁語言標籤，以觸發對應的 CSS 簡繁體字型
+      document.documentElement.lang = currentLang;
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18n[currentLang][key]) el.innerText = t(key);
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (i18n[currentLang][key]) el.placeholder = t(key);
+      });
+
+      // 動態處理部分文字
+      document.title = t('appTitle') + " | Sophia老師的AI練習本";
+      const isStudentMode = new URLSearchParams(window.location.search).get('student') === '1';
+      document.getElementById('step3-label').innerText = isStudentMode ? t('step3student') : t('step3');
+      
+      updateVocabCount();
+      updateFullscreenUI();
+      
+      // 更新遊戲內的動態名稱與提示
+      if (gameState === 'setup') setGameMode(gameMode);
+      if (gameState === 'playing' || gameState === 'gameover') {
+        const p1InputVal = document.getElementById('p1-name-input').value.trim();
+        const p2InputVal = document.getElementById('p2-name-input').value.trim();
+        p1Name = p1InputVal || t('p1Default');
+        p2Name = gameMode === 'pve' ? t('computer') : (p2InputVal || t('p2Default'));
+        document.getElementById('p1-name').innerText = p1Name;
+        document.getElementById('p2-name').innerText = p2Name;
+        document.getElementById('game-hint').innerText = gameMode === 'pve' ? t('hintPvE') : t('hintPvP');
+      }
+
+      // 如果語音按鈕狀態
+      const muteText = document.getElementById('text-mute');
+      if (muteText) muteText.innerText = isMuted ? t('btnMute') : t('btnUnmute');
+    }
+
+    // ==================== 核心變數 ====================
     const BOARD_SIZE = 10;
     const STORAGE_KEY = 'gomoku_vocab_save';
     
@@ -415,26 +576,45 @@
     let timeElapsed = 0;
     let timerInterval = null;
     let autoSaveTimeout = null;
+    
+    let p1Name = "黑棋";
+    let p2Name = "白棋";
 
     // ==================== 初始化與設定 ====================
     document.addEventListener('DOMContentLoaded', () => {
+      // 語系載入
+      const savedLang = localStorage.getItem('gomoku_lang');
+      if (savedLang && i18n[savedLang]) {
+        currentLang = savedLang;
+        document.getElementById('lang-select').value = currentLang;
+      }
+      applyTranslations();
+
       const vocabInputEl = document.getElementById('vocab-input');
-      
       const urlParams = new URLSearchParams(window.location.search);
       const sharedVocab = urlParams.get('vocab');
+      const isStudentMode = urlParams.get('student') === '1';
+
+      if (isStudentMode) {
+          document.getElementById('teacher-btn-container').classList.add('hidden');
+          document.getElementById('step3-label').innerText = t('step3student');
+      }
 
       if (sharedVocab) {
         vocabInputEl.value = sharedVocab;
-        showToast("已成功載入老師分享的題庫！");
-        if (window.history.replaceState) {
-            window.history.replaceState({}, document.title, window.location.pathname);
+        if (isStudentMode) {
+            showToast(t('toastLoadedStudent'));
+            if (window.history.replaceState) window.history.replaceState({}, document.title, window.location.pathname + "?student=1");
+        } else {
+            showToast(t('toastLoadedShare'));
+            if (window.history.replaceState) window.history.replaceState({}, document.title, window.location.pathname);
         }
       } else {
         const savedVocab = localStorage.getItem(STORAGE_KEY);
         if (savedVocab !== null && savedVocab.trim() !== '') {
           vocabInputEl.value = savedVocab;
         } else {
-          vocabInputEl.value = DEFAULT_VOCAB;
+          vocabInputEl.value = DEFAULT_VOCABS[currentLang];
         }
       }
       
@@ -450,7 +630,7 @@
     function copyShareLink() {
       const currentVocab = document.getElementById('vocab-input').value;
       const encodedVocab = encodeURIComponent(currentVocab);
-      const shareUrl = window.location.origin + window.location.pathname + '?vocab=' + encodedVocab;
+      const shareUrl = window.location.origin + window.location.pathname + '?vocab=' + encodedVocab + '&student=1';
       
       const textArea = document.createElement("textarea");
       textArea.value = shareUrl;
@@ -463,11 +643,10 @@
       
       try {
           document.execCommand('copy');
-          document.getElementById('toast-msg').innerText = "已複製連結！快傳給學生吧！";
-          showToast();
+          showToast(t('toastCopied'));
       } catch (err) {
           console.error('複製失敗', err);
-          alert("複製失敗，請手動選取網址列分享");
+          alert(t('toastCopyFail'));
       }
       document.body.removeChild(textArea);
     }
@@ -494,16 +673,13 @@
 
     function updateVocabCount() {
       const inputVal = document.getElementById('vocab-input').value;
-      
       localStorage.setItem(STORAGE_KEY, inputVal);
       
       const hintEl = document.getElementById('auto-save-hint');
       if(hintEl) {
         hintEl.classList.remove('opacity-0');
         clearTimeout(autoSaveTimeout);
-        autoSaveTimeout = setTimeout(() => {
-          hintEl.classList.add('opacity-0');
-        }, 1500);
+        autoSaveTimeout = setTimeout(() => { hintEl.classList.add('opacity-0'); }, 1500);
       }
 
       const list = getWordList();
@@ -511,13 +687,13 @@
       document.getElementById('edit-word-count').innerText = count;
       document.getElementById('vocab-count-display').innerText = count;
       
-      const preview = list.slice(0, 5).join(', ') + (count > 5 ? '...' : '');
-      document.getElementById('vocab-preview-display').innerText = preview || '無生詞';
+      const preview = list.slice(0, 8).join(', ') + (count > 8 ? '...' : '');
+      document.getElementById('vocab-preview-display').innerText = preview || t('noWords');
     }
 
     function restoreDefaultVocab() {
-      if (confirm('確定要清除目前的題庫，並恢復為預設生詞嗎？')) {
-        document.getElementById('vocab-input').value = DEFAULT_VOCAB;
+      if (confirm(t('toastRestore'))) {
+        document.getElementById('vocab-input').value = DEFAULT_VOCABS[currentLang];
         updateVocabCount();
       }
     }
@@ -525,12 +701,17 @@
     function toggleEditVocab(showEdit) {
       const mainView = document.getElementById('main-setup-view');
       const editView = document.getElementById('edit-vocab-view');
+      const teacherBtn = document.getElementById('teacher-btn-container');
+
       if (showEdit) {
         mainView.classList.add('hidden');
         editView.classList.remove('hidden');
+        if(teacherBtn) teacherBtn.classList.add('hidden');
       } else {
         editView.classList.add('hidden');
         mainView.classList.remove('hidden');
+        const isStudentMode = new URLSearchParams(window.location.search).get('student') === '1';
+        if(teacherBtn && !isStudentMode) teacherBtn.classList.remove('hidden');
         updateVocabCount();
       }
     }
@@ -544,7 +725,6 @@
       
       btnPve.className = "flex-1 flex flex-col items-center p-5 rounded-2xl border-2 transition-all border-gray-200 bg-white hover:bg-gray-50 text-gray-400 hover:text-gray-500";
       btnPvp.className = "flex-1 flex flex-col items-center p-5 rounded-2xl border-2 transition-all border-gray-200 bg-white hover:bg-gray-50 text-gray-400 hover:text-gray-500";
-      
       btnPve.querySelector('div').className = "bg-gray-50 p-3 rounded-full mb-3";
       btnPve.querySelector('i').className = "ph-fill ph-robot text-4xl current-color";
       btnPvp.querySelector('div').className = "bg-gray-50 p-3 rounded-full mb-3";
@@ -562,12 +742,25 @@
       activeBtn.querySelector('i').classList.remove('current-color');
       activeBtn.querySelector('span:first-of-type').className = "font-black text-xl text-orange-700";
       activeBtn.querySelector('span:last-child').className = "text-sm text-orange-500/80 mt-1 font-bold";
+      
+      const p2Input = document.getElementById('p2-name-input');
+      const p2IconSetup = document.getElementById('p2-name-icon-setup');
+      if (mode === 'pve') {
+        p2Input.disabled = true;
+        p2Input.placeholder = t('computer');
+        p2Input.value = "";
+        p2IconSetup.className = "ph-fill ph-robot text-lg";
+      } else {
+        p2Input.disabled = false;
+        p2Input.placeholder = t('p2Placeholder');
+        p2IconSetup.className = "ph-fill ph-user text-lg";
+      }
     }
 
     // ==================== 遊戲核心邏輯 ====================
     function initGame() {
       let words = getWordList();
-      if (words.length === 0) words = ['中文', '華語', '學習', '快樂'];
+      if (words.length === 0) words = ['中文', '华语', 'Happy']; // 簡單防呆
 
       board = [];
       for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
@@ -600,16 +793,20 @@
         updateTimerDisplay();
       }, 1000);
 
+      const p1InputVal = document.getElementById('p1-name-input').value.trim();
+      const p2InputVal = document.getElementById('p2-name-input').value.trim();
+      p1Name = p1InputVal || t('p1Default');
+      p2Name = gameMode === 'pve' ? t('computer') : (p2InputVal || t('p2Default'));
+
       document.getElementById('setup-screen').classList.add('hidden');
       document.getElementById('game-screen').classList.remove('hidden');
       document.getElementById('gameover-modal').classList.add('hidden');
       
-      document.getElementById('p2-name').innerText = gameMode === 'pve' ? '電腦' : '白棋';
+      document.getElementById('p1-name').innerText = p1Name;
+      document.getElementById('p2-name').innerText = p2Name;
       document.getElementById('p2-icon').className = gameMode === 'pve' ? 'ph-fill ph-robot text-gray-500 text-sm sm:text-base' : 'ph-fill ph-user text-gray-500 text-sm sm:text-base';
       
-      document.getElementById('game-hint').innerHTML = gameMode === 'pve' 
-        ? '<i class="ph-fill ph-lightbulb text-yellow-500 text-xl"></i> 點擊格子放上棋子。電腦會自動讀出詞彙，請跟著大聲念喔！' 
-        : '<i class="ph-fill ph-lightbulb text-yellow-500 text-xl"></i> 點擊格子放上棋子。請大聲念出格子裡的字再下棋喔！';
+      document.getElementById('game-hint').innerText = gameMode === 'pve' ? t('hintPvE') : t('hintPvP');
       
       updateScoresUI();
       renderBoard();
@@ -630,11 +827,8 @@
       const word = board[index].word;
       
       if (!isMuted) {
-         if (gameMode === 'pve' && currentPlayer === 1) {
-            speakText(word);
-         } else if (gameMode === 'pvp') {
-            speakText(word);
-         }
+         if (gameMode === 'pve' && currentPlayer === 1) speakText(word);
+         else if (gameMode === 'pvp') speakText(word);
       }
 
       placePiece(index, currentPlayer);
@@ -651,15 +845,8 @@
         return;
       }
 
-      if (board.every(cell => cell.owner !== null)) {
-        endGame('draw');
-        return;
-      }
-
-      if (!checkPossibleWin(1) && !checkPossibleWin(2)) {
-        endGame('draw');
-        return;
-      }
+      if (board.every(cell => cell.owner !== null)) { endGame('draw'); return; }
+      if (!checkPossibleWin(1) && !checkPossibleWin(2)) { endGame('draw'); return; }
 
       currentPlayer = player === 1 ? 2 : 1;
       updatePlayerTurnUI();
@@ -683,17 +870,18 @@
       const modalIcon = document.getElementById('modal-icon');
       
       if (winner === 'draw') {
-        winnerText.innerText = '平手！';
+        winnerText.innerText = t('drawText');
         modalIcon.className = "ph-fill ph-handshake text-[6rem] text-blue-400 mx-auto mb-6 block drop-shadow-lg";
         if (board.some(cell => cell.owner === null)) {
-          descText.innerText = '雙方都沒有機會連線了，提前結束平手！';
+          descText.innerText = t('drawDesc1');
         } else {
-          descText.innerText = '棋盤下滿了，雙方不分軒輊！';
+          descText.innerText = t('drawDesc2');
         }
       } else {
-        winnerText.innerText = `${winner === 1 ? '黑棋' : '白棋'} 獲勝！`;
+        const winnerName = winner === 1 ? p1Name : p2Name;
+        winnerText.innerText = `${winnerName} ${t('winText')}`;
         modalIcon.className = "ph-fill ph-trophy text-[6rem] text-orange-500 mx-auto mb-6 block drop-shadow-lg";
-        descText.innerText = '太棒了！大家都學會好多新詞了！';
+        descText.innerText = t('winDesc');
       }
       
       setTimeout(() => {
@@ -708,7 +896,6 @@
 
       board.forEach((cell, index) => {
         const isWinningCell = winningLine.includes(index);
-        
         let el = document.createElement('div');
         let span = document.createElement('span');
         
@@ -734,14 +921,12 @@
         else if (cell.owner === 1) {
           el.className = `relative flex items-center justify-center aspect-square rounded-full transition-all duration-300 bg-[radial-gradient(circle_at_30%_30%,#52525b,#09090b)] shadow-[0_4px_8px_rgba(0,0,0,0.6),inset_-2px_-2px_6px_rgba(0,0,0,0.8),inset_2px_2px_6px_rgba(255,255,255,0.2)] cursor-default scale-[0.95]`;
           if (isWinningCell) el.classList.add('ring-4', 'ring-yellow-400', 'ring-offset-2', 'ring-offset-[#d29b59]', 'animate-pulse', 'z-20', 'scale-100');
-          
           span.className = `text-center font-black px-0.5 select-none pointer-events-none z-10 scalable-text text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]`;
           span.innerText = cell.word;
         } 
         else if (cell.owner === 2) {
           el.className = `relative flex items-center justify-center aspect-square rounded-full transition-all duration-300 bg-[radial-gradient(circle_at_30%_30%,#ffffff,#d4d4d8)] shadow-[0_4px_8px_rgba(0,0,0,0.3),inset_-2px_-2px_6px_rgba(0,0,0,0.1),inset_2px_2px_6px_rgba(255,255,255,0.8)] cursor-default scale-[0.95]`;
           if (isWinningCell) el.classList.add('ring-4', 'ring-yellow-400', 'ring-offset-2', 'ring-offset-[#d29b59]', 'animate-pulse', 'z-20', 'scale-100');
-          
           span.className = `text-center font-black px-0.5 select-none pointer-events-none z-10 scalable-text text-gray-700 drop-shadow-[0_1px_1px_rgba(255,255,255,1)]`;
           span.innerText = cell.word;
         }
@@ -760,13 +945,8 @@
       const inactiveClass = "flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 px-2 sm:px-6 py-2 sm:py-3 rounded-xl transition-all duration-300 bg-white/50 text-gray-400 border border-gray-200";
       const inactiveClassReverse = "flex-1 flex flex-col sm:flex-row-reverse items-center justify-center gap-2 sm:gap-4 px-2 sm:px-6 py-2 sm:py-3 rounded-xl transition-all duration-300 bg-white/50 text-gray-400 border border-gray-200";
 
-      if (currentPlayer === 1) {
-        p1.className = activeClass;
-        p2.className = inactiveClassReverse;
-      } else {
-        p2.className = activeClass.replace('sm:flex-row', 'sm:flex-row-reverse');
-        p1.className = inactiveClass;
-      }
+      if (currentPlayer === 1) { p1.className = activeClass; p2.className = inactiveClassReverse; } 
+      else { p2.className = activeClass.replace('sm:flex-row', 'sm:flex-row-reverse'); p1.className = inactiveClass; }
     }
 
     function updateScoresUI() {
@@ -786,22 +966,10 @@
       for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
           if (board[r * size + c]?.owner !== player) continue;
-          if (c <= size - 5) {
-            const line = [0, 1, 2, 3, 4].map(i => r * size + c + i);
-            if (line.every(idx => board[idx]?.owner === player)) return line;
-          }
-          if (r <= size - 5) {
-            const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c);
-            if (line.every(idx => board[idx]?.owner === player)) return line;
-          }
-          if (r <= size - 5 && c <= size - 5) {
-            const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c + i);
-            if (line.every(idx => board[idx]?.owner === player)) return line;
-          }
-          if (r <= size - 5 && c >= 4) {
-            const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c - i);
-            if (line.every(idx => board[idx]?.owner === player)) return line;
-          }
+          if (c <= size - 5) { const line = [0, 1, 2, 3, 4].map(i => r * size + c + i); if (line.every(idx => board[idx]?.owner === player)) return line; }
+          if (r <= size - 5) { const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c); if (line.every(idx => board[idx]?.owner === player)) return line; }
+          if (r <= size - 5 && c <= size - 5) { const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c + i); if (line.every(idx => board[idx]?.owner === player)) return line; }
+          if (r <= size - 5 && c >= 4) { const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c - i); if (line.every(idx => board[idx]?.owner === player)) return line; }
         }
       }
       return null;
@@ -811,22 +979,10 @@
       const size = BOARD_SIZE;
       for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
-          if (c <= size - 5) {
-            const line = [0, 1, 2, 3, 4].map(i => r * size + c + i);
-            if (line.every(idx => board[idx].owner === player || board[idx].owner === null)) return true;
-          }
-          if (r <= size - 5) {
-            const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c);
-            if (line.every(idx => board[idx].owner === player || board[idx].owner === null)) return true;
-          }
-          if (r <= size - 5 && c <= size - 5) {
-            const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c + i);
-            if (line.every(idx => board[idx].owner === player || board[idx].owner === null)) return true;
-          }
-          if (r <= size - 5 && c >= 4) {
-            const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c - i);
-            if (line.every(idx => board[idx].owner === player || board[idx].owner === null)) return true;
-          }
+          if (c <= size - 5) { const line = [0, 1, 2, 3, 4].map(i => r * size + c + i); if (line.every(idx => board[idx].owner === player || board[idx].owner === null)) return true; }
+          if (r <= size - 5) { const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c); if (line.every(idx => board[idx].owner === player || board[idx].owner === null)) return true; }
+          if (r <= size - 5 && c <= size - 5) { const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c + i); if (line.every(idx => board[idx].owner === player || board[idx].owner === null)) return true; }
+          if (r <= size - 5 && c >= 4) { const line = [0, 1, 2, 3, 4].map(i => (r + i) * size + c - i); if (line.every(idx => board[idx].owner === player || board[idx].owner === null)) return true; }
         }
       }
       return false; 
@@ -882,13 +1038,14 @@
       isComputerThinking = false;
     }
 
-    // ==================== 輔助功能 ====================
+    // ==================== 語音與視窗功能 ====================
     function speakText(text) {
       if (isMuted) return;
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'zh-TW';
+        // 設定語音：簡體介面用大陸口音，其餘(包含英文介面)使用台灣口音來朗讀華語
+        utterance.lang = currentLang === 'zh-CN' ? 'zh-CN' : 'zh-TW';
         utterance.rate = 0.85;
         utterance.pitch = 1.1;
         window.speechSynthesis.speak(utterance);
@@ -904,11 +1061,11 @@
       if (isMuted) {
         btn.className = "bg-red-50/80 backdrop-blur-sm text-red-600 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm border border-red-100 hover:bg-red-100 font-bold flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0";
         icon.className = "ph-bold ph-speaker-slash text-xl";
-        text.innerText = "已靜音";
+        text.innerText = t('btnMute');
       } else {
         btn.className = "bg-green-100/80 backdrop-blur-sm text-green-700 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm border border-white/50 hover:bg-green-100 font-bold flex items-center gap-2 transition-all hover:-translate-y-0.5 active:translate-y-0";
         icon.className = "ph-bold ph-speaker-high text-xl";
-        text.innerText = "語音開啟";
+        text.innerText = t('btnUnmute');
       }
     }
 
@@ -916,22 +1073,19 @@
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => console.log('Fullscreen error:', err));
       } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        }
+        if (document.exitFullscreen) document.exitFullscreen();
       }
     }
 
     function updateFullscreenUI() {
       const icon = document.getElementById('icon-fullscreen');
       const text = document.getElementById('text-fullscreen');
-      
       if (isFullscreen) {
         icon.className = "ph-bold ph-corners-in text-xl";
-        text.innerText = "退出";
+        text.innerText = t('btnExitFull');
       } else {
         icon.className = "ph-bold ph-corners-out text-xl";
-        text.innerText = "全螢幕";
+        text.innerText = t('btnFull');
       }
     }
   </script>
