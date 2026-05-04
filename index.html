@@ -261,11 +261,13 @@
             <p data-i18n="teacherDesc" class="text-gray-500 font-bold mt-2">設定題庫並產生給學生的遊戲連結</p>
           </div>
           
-          <div class="mb-3 flex flex-col sm:flex-row justify-between sm:items-end gap-2">
-            <label class="text-lg font-bold text-gray-600">
-              <span data-i18n="inputCustom">請貼上或輸入自訂生詞</span> <span data-i18n="inputHint" class="text-sm font-normal text-gray-400">(空格或逗號分隔)</span>
-            </label>
-            <div class="flex items-center gap-2">
+          <div class="mb-3 flex flex-col sm:flex-row justify-between sm:items-end gap-3">
+            <div class="flex flex-col gap-2">
+              <label class="text-lg font-bold text-gray-600">
+                <span data-i18n="inputCustom">請貼上或輸入自訂生詞</span> <span data-i18n="inputHint" class="text-sm font-normal text-gray-400">(空格或逗號分隔)</span>
+              </label>
+            </div>
+            <div class="flex items-center gap-2 pb-1">
               <span id="auto-save-hint" data-i18n="autoSaved" class="text-gray-400 text-sm font-bold opacity-0 transition-opacity">已自動儲存</span>
               <span class="text-blue-700 font-black bg-blue-100 px-4 py-1.5 rounded-full text-sm inline-block shadow-sm">
                 <span data-i18n="wordCount">目前字數：</span><span id="edit-word-count" class="text-lg">0</span> <span data-i18n="wordUnit">字</span>
@@ -273,17 +275,58 @@
             </div>
           </div>
           
+          <!-- 新增：分類清楚的題庫範例下拉選單 -->
+          <div class="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-blue-50/50 p-3 sm:p-4 rounded-xl border border-blue-100">
+            <label class="font-bold text-blue-800 shrink-0 flex items-center gap-2">
+              <i class="ph-bold ph-book-open-text text-xl"></i> <span data-i18n="presetLabel">題庫範例：</span>
+            </label>
+            <select id="preset-vocab-select" onchange="loadPresetVocab(this.value)" class="w-full bg-white border border-blue-200 text-gray-700 px-3 py-2 rounded-lg font-bold outline-none cursor-pointer hover:border-blue-400 transition-colors shadow-sm text-sm sm:text-base">
+              <option value="" data-i18n="presetOption0">-- 選擇《學華語向前走》預設生詞 / 生字 --</option>
+              <optgroup label="📖 生詞版 (Vocabulary)">
+                <option value="L01-V">第一課：新同學</option>
+                <option value="L02-V">第二課：我爸爸做生意</option>
+                <option value="L03-V">第三課：去超級市場</option>
+                <option value="L04-V">第四課：我想吃漢堡</option>
+                <option value="L05-V">第五課：春天快到了</option>
+                <option value="L06-V">第六課：華人新年</option>
+                <option value="L07-V">第七課：早一點睡覺</option>
+                <option value="L08-V">第八課：我的寵物</option>
+                <option value="L09-V">第九課：音樂教室在北方</option>
+                <option value="L10-V">第十課：外公外婆住在臺灣</option>
+                <option value="L11-V">第十一課：去動物園</option>
+                <option value="L12-V">第十二課：打網路電話</option>
+              </optgroup>
+              <optgroup label="🔤 生字版 (Characters)">
+                <option value="L01-C">第一課 (生字)</option>
+                <option value="L02-C">第二課 (生字)</option>
+                <option value="L03-C">第三課 (生字)</option>
+                <option value="L04-C">第四課 (生字)</option>
+                <option value="L05-C">第五課 (生字)</option>
+                <option value="L06-C">第六課 (生字)</option>
+                <option value="L07-C">第七課 (生字)</option>
+                <option value="L08-C">第八課 (生字)</option>
+                <option value="L09-C">第九課 (生字)</option>
+                <option value="L10-C">第十課 (生字)</option>
+                <option value="L11-C">第十一課 (生字)</option>
+                <option value="L12-C">第十二課 (生字)</option>
+              </optgroup>
+            </select>
+          </div>
+
           <textarea id="vocab-input" oninput="updateVocabCount()" class="w-full h-64 p-5 border-4 border-gray-100 rounded-2xl focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-100 resize-none text-lg text-gray-700 leading-relaxed font-medium bg-gray-50 focus:bg-white transition-colors"></textarea>
           
-          <div class="flex flex-col sm:flex-row gap-3 mt-6">
-            <button onclick="restoreDefaultVocab()" class="btn-3d flex-1 bg-gray-200 border-gray-400 hover:bg-gray-300 text-gray-700 font-black text-lg py-3 rounded-2xl flex justify-center items-center gap-2">
-              <i class="ph-bold ph-arrow-counter-clockwise text-2xl"></i> <span data-i18n="btnRestore">恢復預設</span>
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+            <button onclick="restoreDefaultVocab()" class="btn-3d bg-gray-200 border-gray-400 hover:bg-gray-300 text-gray-700 font-black text-base sm:text-lg py-3 rounded-2xl flex justify-center items-center gap-1 sm:gap-2">
+              <i class="ph-bold ph-arrow-counter-clockwise text-xl sm:text-2xl"></i> <span data-i18n="btnRestore">預設</span>
             </button>
-            <button onclick="copyShareLink()" class="btn-3d flex-[2] bg-blue-500 border-blue-700 hover:bg-blue-400 text-white font-black text-lg py-3 rounded-2xl flex justify-center items-center gap-2 shadow-lg shadow-blue-500/30">
-              <i class="ph-bold ph-link text-2xl"></i> <span data-i18n="btnCopy">複製學生連結</span>
+            <button onclick="copyShareLink()" class="btn-3d bg-blue-500 border-blue-700 hover:bg-blue-400 text-white font-black text-base sm:text-lg py-3 rounded-2xl flex justify-center items-center gap-1 sm:gap-2 shadow-lg shadow-blue-500/30">
+              <i class="ph-bold ph-link text-xl sm:text-2xl"></i> <span data-i18n="btnCopy">連結</span>
             </button>
-            <button onclick="toggleEditVocab(false)" class="btn-3d flex-[2] bg-green-500 border-green-700 hover:bg-green-400 text-white font-black text-lg py-3 rounded-2xl flex justify-center items-center gap-2">
-              <i class="ph-bold ph-check text-2xl"></i> <span data-i18n="btnDone">完成返回</span>
+            <button onclick="downloadStudentHTML()" class="btn-3d bg-purple-500 border-purple-700 hover:bg-purple-400 text-white font-black text-base sm:text-lg py-3 rounded-2xl flex justify-center items-center gap-1 sm:gap-2 shadow-lg shadow-purple-500/30">
+              <i class="ph-bold ph-download-simple text-xl sm:text-2xl"></i> <span data-i18n="btnDownload">下載學生版</span>
+            </button>
+            <button onclick="toggleEditVocab(false)" class="btn-3d bg-green-500 border-green-700 hover:bg-green-400 text-white font-black text-base sm:text-lg py-3 rounded-2xl flex justify-center items-center gap-1 sm:gap-2">
+              <i class="ph-bold ph-check text-xl sm:text-2xl"></i> <span data-i18n="btnDone">完成</span>
             </button>
           </div>
         </div>
@@ -467,7 +510,7 @@
         teacherZone: "教師專區", teacherDesc: "設定題庫並產生給學生的遊戲連結",
         inputCustom: "請貼上或輸入自訂生詞", inputHint: "(空格或逗號分隔)",
         autoSaved: "已自動儲存", wordCount: "目前字數：", wordUnit: "字",
-        btnRestore: "恢復預設", btnCopy: "複製學生連結", btnDone: "完成返回", btnStart: "開始遊戲！",
+        btnRestore: "預設", btnCopy: "複製連結", btnDownload: "下載學生版", btnDone: "完成", btnStart: "開始遊戲！",
         btnSetup: "重新設定", btnUnmute: "語音開啟", btnMute: "已靜音", btnFull: "全螢幕", btnExitFull: "退出",
         btnPrint: "列印紙本", btnRestart: "重新開局", btnUndo: "回上一步",
         p1Label: "Player 1", p1Default: "黑棋", p2Label: "Player 2", p2Default: "白棋",
@@ -482,7 +525,10 @@
         printRule3: "3. 誰先將五個記號連成一條線（橫向、直向、斜向皆可），誰就獲勝！",
         toastCopied: "已複製學生專屬連結！快傳給學生吧！", toastLoadedShare: "已成功載入分享的題庫！", toastLoadedStudent: "已載入老師指定的題庫！祝你闖關順利！",
         toastRestore: "確定要清除目前的題庫，並恢復為預設生詞嗎？", toastCopyFail: "複製失敗，請手動選取網址列分享", noWords: "無生詞",
-        ruleTitle: "遊戲說明", rule1: "雙人或與電腦輪流下棋。", rule2a: "下棋前，", rule2b: "必須大聲念出格子裡的生詞", rule2c: "！", rule3: "先將五個棋子連成一線就獲勝！"
+        ruleTitle: "遊戲說明", rule1: "雙人或與電腦輪流下棋。", rule2a: "下棋前，", rule2b: "必須大聲念出格子裡的生詞", rule2c: "！", rule3: "先將五個棋子連成一線就獲勝！",
+        toastDownloaded: "已產生專屬檔案！請將它傳給學生（例如上傳 Google Classroom）",
+        alertFileProtocol: "⚠️ 提醒：您目前是在電腦上直接開啟檔案 (file://)\n\n這種情況下產生的「網址連結」學生會打不開喔！\n\n👉 請改用旁邊紫色的「下載學生版」按鈕，然後把下載下來的檔案直接傳給學生。",
+        presetLabel: "題庫範例：", presetOption0: "-- 選擇《學華語向前走》預設生詞 / 生字 --", toastLoadedPreset: "已成功載入題庫範例！"
       },
       'zh-CN': {
         appTitle: "汉字五子棋", appSubtitle: "让孩子在游戏中自然开口说华语！",
@@ -494,7 +540,7 @@
         teacherZone: "教师专区", teacherDesc: "设置题库并生成给学生的游戏链接",
         inputCustom: "请贴上或输入自定义生词", inputHint: "(空格或逗号分隔)",
         autoSaved: "已自动保存", wordCount: "目前字数：", wordUnit: "字",
-        btnRestore: "恢复默认", btnCopy: "复制学生链接", btnDone: "完成返回", btnStart: "开始游戏！",
+        btnRestore: "默认", btnCopy: "复制链接", btnDownload: "下载学生版", btnDone: "完成", btnStart: "开始游戏！",
         btnSetup: "重新设置", btnUnmute: "语音开启", btnMute: "已静音", btnFull: "全屏", btnExitFull: "退出",
         btnPrint: "打印纸本", btnRestart: "重新开局", btnUndo: "撤销",
         p1Label: "Player 1", p1Default: "黑棋", p2Label: "Player 2", p2Default: "白棋",
@@ -509,7 +555,10 @@
         printRule3: "3. 谁先将五个记号连成一条线（横向、直向、斜向皆可），谁就获胜！",
         toastCopied: "已复制学生专属链接！快传给学生吧！", toastLoadedShare: "已成功载入分享的题库！", toastLoadedStudent: "已载入老师指定的题库！祝你闯关顺利！",
         toastRestore: "确定要清除目前的题库，并恢复为默认生词吗？", toastCopyFail: "复制失败，请手动选取网址列分享", noWords: "无生词",
-        ruleTitle: "游戏说明", rule1: "双人或与电脑轮流下棋。", rule2a: "下棋前，", rule2b: "必须大声念出格子里的生词", rule2c: "！", rule3: "先将五个棋子连成一线就获胜！"
+        ruleTitle: "游戏说明", rule1: "双人或与电脑轮流下棋。", rule2a: "下棋前，", rule2b: "必须大声念出格子里的生词", rule2c: "！", rule3: "先将五个棋子连成一线就获胜！",
+        toastDownloaded: "已生成专属文件！请将它传给学生（例如上传 Google Classroom）",
+        alertFileProtocol: "⚠️ 提醒：您目前是在电脑上直接打开文件 (file://)\n\n这种情况下产生的「网址链接」学生会打不开哦！\n\n👉 请改用旁边紫色的「下载学生版」按钮，然后把下载下来的文件直接传给学生。",
+        presetLabel: "题库范例：", presetOption0: "-- 选择《学华语向前走》默认生词 / 生字 --", toastLoadedPreset: "已成功载入题库范例！"
       },
       'en': {
         appTitle: "Chinese Gomoku", appSubtitle: "Learn Chinese naturally through gameplay!",
@@ -521,7 +570,7 @@
         teacherZone: "Teacher Zone", teacherDesc: "Set vocab and generate student links",
         inputCustom: "Paste or type custom vocabulary", inputHint: "(Separated by spaces or commas)",
         autoSaved: "Auto-saved", wordCount: "Word count: ", wordUnit: "words",
-        btnRestore: "Default", btnCopy: "Copy Link", btnDone: "Done", btnStart: "Start Game!",
+        btnRestore: "Default", btnCopy: "Copy Link", btnDownload: "Download HTML", btnDone: "Done", btnStart: "Start Game!",
         btnSetup: "Settings", btnUnmute: "Voice On", btnMute: "Muted", btnFull: "Fullscreen", btnExitFull: "Exit",
         btnPrint: "Print", btnRestart: "Restart", btnUndo: "Undo",
         p1Label: "Player 1", p1Default: "Black", p2Label: "Player 2", p2Default: "White",
@@ -536,10 +585,41 @@
         printRule3: "3. The first player to connect 5 marks in a row wins!",
         toastCopied: "Link copied! Share it with your students!", toastLoadedShare: "Shared vocabulary loaded successfully!", toastLoadedStudent: "Teacher's vocabulary loaded! Good luck!",
         toastRestore: "Clear current words and restore defaults?", toastCopyFail: "Copy failed, please copy the URL manually.", noWords: "No words",
-        ruleTitle: "How to Play", rule1: "Take turns placing pieces with a friend or the computer.", rule2a: "Before playing, you ", rule2b: "MUST read the word out loud", rule2c: "!", rule3: "Connect 5 pieces in a row to win!"
+        ruleTitle: "How to Play", rule1: "Take turns placing pieces with a friend or the computer.", rule2a: "Before playing, you ", rule2b: "MUST read the word out loud", rule2c: "!", rule3: "Connect 5 pieces in a row to win!",
+        toastDownloaded: "Student version downloaded! Please share this file with your students.",
+        alertFileProtocol: "⚠️ Note: You are opening this file locally (file://)\n\nLinks generated this way won't work for students!\n\n👉 Please use the purple 'Download HTML' button instead, and share that downloaded file with your students.",
+        presetLabel: "Examples:", presetOption0: "-- Select a Lesson Vocabulary / Character --", toastLoadedPreset: "Vocabulary loaded successfully!"
       }
     };
     
+    // 新增：12課預設生詞庫與專屬生字庫
+    const LESSON_VOCABS = {
+      'L01-V': "比較, 大家, 方友朋, 高興, 跟, 歡迎, 今年, 介紹, 自己, 看書, 認識, 現在, 新, 學, 游泳, 最, 中文, 張莉",
+      'L02-V': "幫, 電腦公司, 工作, 上班, 外公, 外婆, 一樣, 以前, 銀行, 醫生, 做生意",
+      'L03-V': "冰淇淋, 超級市場, 東西, 附近, 可以, 米, 買, 牛肉, 巧克力, 青菜, 糖果, 要, 魚",
+      'L04-V': "出去, 蛋炒飯, 餓, 漢堡, 快點, 了, 麵, 薯條, 湯, 晚餐, 晚飯, 先, 已經, 玉米, 再, 週末",
+      'L05-V': "變, 不錯, 白色, 春天, 草, 紅色, 黃, 還是, 花, 了, 綠色, 漂亮, 秋天, 時候, 樹葉, 天氣, 院子, 顏色, 舒服",
+      'L06-V': "拜年, 放鞭炮, 給, 紅包, 會, 每, 那天, 年糕, 如果, 說, 台灣, 貼春聯, 新年, 下, 星期, 華人, 農曆",
+      'L07-V': "別, 肥皂, 乾淨, 該, 過, 趕快, 來不及, 累, 起床, 刷牙, 睡覺, 晚上, 忘, 洗, 洗澡, 洗臉, 用, 知道, 昨天",
+      'L08-V': "不見了, 寵物, 帶, 非常, 狗, 可愛, 貓, 去年, 送給, 上個月, 牠們, 兔子, 餵, 養, 隻, 散步",
+      'L09-V': "北方, 東方, 方向, 告訴, 教室, 南方, 所以, 它, 校門口, 西方, 因為, 足球場, 指北針, 指南針, 還是",
+      'L10-V': "本來, 法國, 舅舅, 看, 旅行, 紐約, 臺北, 臺南, 退休, 一次, 住在, 暑假",
+      'L11-V': "不但, 脖子, 長頸鹿, 大象, 動物園, 猴子, 看到, 老虎, 胖, 企鵝, 玩, 熊貓, 希望, 這一次, 長, 真",
+      'L12-V': "啊, 過來, 很久, 好好, 看起來, 沒問題, 上課, 說話, 瘦, 網路, 寫, 信, 有意思, 一定, 影像, 長高",
+      'L01-C': "新, 同, 學, 自, 己, 年, 跟, 比",
+      'L02-C': "外, 公, 以, 前, 工, 作, 班, 後",
+      'L03-C': "去, 近, 買, 東, 西, 魚, 還, 可",
+      'L04-C': "出, 先, 週, 末, 晚, 蛋, 飯, 現, 點",
+      'L05-C': "黃, 綠, 色, 時, 候, 花, 子, 紅, 白",
+      'L06-C': "華, 說, 對, 星, 期, 會, 每, 給, 如, 果",
+      'L07-C': "起, 累, 早, 洗, 昨, 過, 別, 忘, 用, 臉",
+      'L08-C': "送, 隻, 狗, 帶, 散, 步, 貓, 非, 愛",
+      'L09-C': "南, 北, 方, 裡, 校, 門, 口, 因, 為, 所",
+      'L10-C': "本, 住, 退, 休, 次, 旅, 行, 法, 國",
+      'L11-C': "動, 物, 園, 老, 希, 望, 但, 胖, 真, 長",
+      'L12-C': "久, 話, 高, 課, 寫, 沒, 題, 定, 意, 思"
+    };
+
     const DEFAULT_VOCABS = {
       'zh-TW': "動物園, 老虎, 大象, 玩, 看到, 網路, 電話, 寫信, 說話, 影像, 外公, 外婆, 臺北, 臺南, 旅行, 退休, 舅舅, 紐約, 法國, 一次, 超級市場, 巧克力, 冰淇淋, 牛肉, 青菜, 糖果, 漢堡, 薯條, 週末, 晚餐, 蛋炒飯, 玉米湯, 舒服, 秋天, 春天, 新年, 恭喜, 紅包, 壓歲錢, 燈籠",
       'zh-CN': "动物园, 老虎, 大象, 玩, 看到, 网络, 电话, 写信, 说话, 影像, 外公, 外婆, 台北, 台南, 旅行, 退休, 舅舅, 纽约, 法国, 一次, 超级市场, 巧克力, 冰淇淋, 牛肉, 青菜, 糖果, 汉堡, 薯条, 周末, 晚餐, 蛋炒饭, 玉米汤, 舒服, 秋天, 春天, 新年, 恭喜, 红包, 压岁钱, 灯笼",
@@ -630,8 +710,28 @@
 
       const vocabInputEl = document.getElementById('vocab-input');
       const urlParams = new URLSearchParams(window.location.search);
-      const sharedVocab = urlParams.get('vocab');
-      const isStudentMode = urlParams.get('student') === '1';
+      
+      let sharedVocab = null;
+      let isStudentMode = false;
+
+      // 檢查是否為「下載出來的學生專屬網頁」
+      if (window.IS_STUDENT_HTML) {
+          isStudentMode = true;
+          sharedVocab = window.STUDENT_VOCAB;
+      } else {
+          // 檢查網址列參數
+          const vParam = urlParams.get('v') || urlParams.get('vocab');
+          if (vParam) {
+              try {
+                  // 嘗試解碼 Base64 (防止通訊軟體截斷特殊字元)
+                  sharedVocab = decodeURIComponent(atob(vParam));
+              } catch (e) {
+                  // 若非 Base64，退回原本的 URI Component 解碼
+                  sharedVocab = vParam;
+              }
+          }
+          isStudentMode = (urlParams.get('s') === '1') || (urlParams.get('student') === '1');
+      }
 
       if (isStudentMode) {
           document.getElementById('teacher-btn-container').classList.add('hidden');
@@ -642,10 +742,14 @@
         vocabInputEl.value = sharedVocab;
         if (isStudentMode) {
             showToast(t('toastLoadedStudent'));
-            if (window.history.replaceState) window.history.replaceState({}, document.title, window.location.pathname + "?student=1");
+            if (window.history.replaceState && !window.IS_STUDENT_HTML) {
+                window.history.replaceState({}, document.title, window.location.pathname + "?s=1");
+            }
         } else {
             showToast(t('toastLoadedShare'));
-            if (window.history.replaceState) window.history.replaceState({}, document.title, window.location.pathname);
+            if (window.history.replaceState && !window.IS_STUDENT_HTML) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
         }
       } else {
         const savedVocab = localStorage.getItem(STORAGE_KEY);
@@ -665,11 +769,18 @@
       });
     });
 
-    // ==================== 分享連結功能 ====================
+    // ==================== 分享連結與下載功能 ====================
     function copyShareLink() {
+      // 偵測老師是否在本地端使用，給予友善提示
+      if (window.location.protocol === 'file:') {
+          alert(t('alertFileProtocol'));
+          return;
+      }
+
       const currentVocab = document.getElementById('vocab-input').value;
-      const encodedVocab = encodeURIComponent(currentVocab);
-      const shareUrl = window.location.origin + window.location.pathname + '?vocab=' + encodedVocab + '&student=1';
+      // 使用 Base64 編碼壓縮，避免 LINE 或 Messenger 截斷網址
+      const encodedVocab = btoa(encodeURIComponent(currentVocab));
+      const shareUrl = window.location.origin + window.location.pathname + '?v=' + encodedVocab + '&s=1';
       
       const textArea = document.createElement("textarea");
       textArea.value = shareUrl;
@@ -688,6 +799,48 @@
           alert(t('toastCopyFail'));
       }
       document.body.removeChild(textArea);
+    }
+
+    // 新增：下載學生專屬離線版功能
+    function downloadStudentHTML() {
+      const currentVocab = document.getElementById('vocab-input').value;
+
+      // 1. 暫時將畫面切換到學生的狀態
+      document.getElementById('edit-vocab-view').classList.add('hidden');
+      document.getElementById('main-setup-view').classList.remove('hidden');
+      document.getElementById('teacher-btn-container').classList.add('hidden');
+      document.getElementById('step4-label').innerText = t('step4student');
+
+      // 清除可能舊的腳本避免重複
+      const existingScript = document.getElementById('student-data-script');
+      if (existingScript) existingScript.remove();
+
+      // 2. 獲取當前網頁的所有 HTML
+      let html = document.documentElement.outerHTML;
+      html = '<!DOCTYPE html>\n' + html;
+      
+      // 3. 注入學生專屬的資料與「學生鎖」
+      const injectScript = `<script id="student-data-script">window.STUDENT_VOCAB = decodeURIComponent("${encodeURIComponent(currentVocab)}"); window.IS_STUDENT_HTML = true;<\/script>`;
+      html = html.replace('</head>', injectScript + '\n</head>');
+
+      // 4. 恢復教師畫面的狀態
+      document.getElementById('edit-vocab-view').classList.remove('hidden');
+      document.getElementById('main-setup-view').classList.add('hidden');
+      document.getElementById('teacher-btn-container').classList.remove('hidden');
+      document.getElementById('step4-label').innerText = t('step4');
+
+      // 5. 觸發自動下載
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '學生專屬_漢字五子棋.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast(t('toastDownloaded'));
     }
 
     function showToast(customMsg) {
@@ -728,6 +881,15 @@
       
       const preview = list.slice(0, 8).join(', ') + (count > 8 ? '...' : '');
       document.getElementById('vocab-preview-display').innerText = preview || t('noWords');
+    }
+
+    // 新增：載入預設題庫
+    function loadPresetVocab(lessonKey) {
+      if (!lessonKey) return;
+      document.getElementById('vocab-input').value = LESSON_VOCABS[lessonKey];
+      updateVocabCount();
+      showToast(t('toastLoadedPreset'));
+      document.getElementById('preset-vocab-select').value = ""; // 重設選單，方便下次再選
     }
 
     function restoreDefaultVocab() {
